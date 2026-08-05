@@ -24,9 +24,10 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - uses: ./.github/actions/setup-sdk
+      - name: Install Android SDK
+        uses: ./.github/actions/setup-sdk
 
-      - name: Install Android SDK 36 components
+      - name: Install Android SDK 36 Components
         run: |
           sdkmanager "platforms;android-36" "build-tools;36.0.0"
 

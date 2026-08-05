@@ -1,0 +1,17 @@
+name: look sdk directory
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  sdk:
+    runs-on: ubuntu-latest
+
+    steps:
+       - uses: ./.github/actions/setup-sdk
+
+       - name: see sdk directory
+         run: |
+            echo "ANDROID_HOME=$ANDROID_HOME"
+            echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT"
