@@ -25,6 +25,7 @@ jobs:
         run: chmod +x gradlew
 
       - name: Install Android SDK 36 components
+        uses: android-actions/setup-android@v3
         run: |
           yes | sdkmanager --licenses > /dev/null || true
           sdkmanager "platforms;android-36" "build-tools;36.0.0"
