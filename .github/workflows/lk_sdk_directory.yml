@@ -3,12 +3,16 @@ name: look sdk directory
 on:
   push:
     branches: [ "main" ]
+  workflow_dispatch:
 
 jobs:
   sdk:
     runs-on: ubuntu-latest
 
     steps:
+       - name: Checkout repository
+         uses: actions/checkout@v4
+
        - uses: ./.github/actions/setup-sdk
 
        - name: see sdk directory
