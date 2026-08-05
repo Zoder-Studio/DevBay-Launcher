@@ -1,0 +1,20 @@
+name: Setup Android SDK
+description: Install Android SDK and sdkmanager
+
+runs:
+  using: composite
+
+  steps:
+    - name: Setup Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: temurin
+        java-version: "17"
+
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+
+    - name: Accept licenses
+      shell: bash
+      run: |
+        yes | sdkmanager --licenses > /dev/null || true
