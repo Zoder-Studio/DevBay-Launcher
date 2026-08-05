@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="launcher_background">#0D0D12</color>
+    <color name="launcher_text_primary">#F5F5F7</color>
+    <color name="launcher_text_secondary">#9A9AA5</color>
+    <color name="accent_primary">#7C5CFC</color>
+    <color name="ic_launcher_background">#1B1730</color>
+    <color name="search_pill_background">#221D3A</color>
+</resources>

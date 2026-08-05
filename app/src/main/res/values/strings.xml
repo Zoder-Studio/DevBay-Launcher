@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">DevBay Launcher</string>
+    <string name="no_apps_found">No apps found</string>
+    <string name="app_launch_failed">Could not launch %1$s</string>
+    <string name="search_apps_hint">Search apps</string>
+    <string name="edit_label">EDIT</string>
+    <string name="app_count_one">One app</string>
+    <string name="app_count_other">%1$d apps</string>
+    <string name="action_pin">Pin to favorites</string>
+    <string name="action_unpin">Unpin from favorites</string>
+    <string name="action_add_tools">Add to Tools</string>
+    <string name="action_remove_tools">Remove from Tools</string>
+    <string name="action_app_info">App info</string>
+    <string name="action_close">Close</string>
+    <string name="action_save">Save</string>
+    <string name="action_remove">Remove</string>
+    <string name="edit_pinned_title">Tap to unpin</string>
+    <string name="no_pinned_apps">No pinned apps yet</string>
+
+    <string name="action_hide_app">Hide app</string>
+    <string name="action_unhide">Unhide app</string>
+    <string name="app_hidden">%1$s hidden</string>
+    <string name="setup_vault_title">Set Vault Password</string>
+    <string name="setup_vault_message">This password protects your hidden apps. Type it in the search bar anytime to open the vault.</string>
+    <string name="hint_new_password">New password</string>
+    <string name="hint_confirm_password">Confirm password</string>
+    <string name="hint_current_password">Current password</string>
+    <string name="enable_biometric_label">Also allow fingerprint / face unlock</string>
+    <string name="biometric_unavailable">Fingerprint / face not available on this device</string>
+    <string name="error_password_too_short">Password must be at least 4 characters</string>
+    <string name="error_password_mismatch">Passwords do not match</string>
+    <string name="error_wrong_password">Current password is incorrect</string>
+    <string name="vault_password_updated">Vault password updated</string>
+    <string name="change_vault_password_title">Change Vault Password</string>
+    <string name="vault_toolbar_title">Hidden Vault</string>
+    <string name="no_hidden_apps">No hidden apps yet</string>
+    <string name="biometric_prompt_title">Unlock Hidden Vault</string>
+    <string name="biometric_prompt_subtitle">Use your fingerprint or face to continue</string>
+
+    <string name="widget_add_cancelled">Widget not added</string>
+    <string name="remove_widget_title">Remove this widget?</string>
+    <string name="widget_picker_title">Add Widget</string>
+    <string name="no_widgets_available">No widgets available</string>
+</resources>
