@@ -7,6 +7,7 @@ import android.appwidget.AppWidgetProviderInfo
 import android.content.ActivityNotFoundException
 import android.content.ComponentName
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
@@ -22,8 +23,17 @@ import androidx.activity.addCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.repeatOnLifecycle
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.devbay.launcher.databinding.ActivityMainBinding
+import com.devbay.launcher.settings.SettingsActivity
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import rikka.shizuku.Shizuku
 import java.util.Locale
 
 class MainActivity : AppCompatActivity() {
@@ -39,6 +49,14 @@ class MainActivity : AppCompatActivity() {
     private lateinit var appWidgetHost: AppWidgetHost
     private lateinit var widgetRepository: WidgetRepository
 
+    private lateinit var systemToggleRepository: SystemToggleRepository
+    private lateinit var notificationAccessPreferences: NotificationAccessPreferences
+    private lateinit var quickToggleAdapter: QuickToggleAdapter
+
+    private lateinit var recentAppsRepository: RecentAppsRepository
+    private lateinit var recentAppsAdapter: RecentAppsAdapter
+
+    private var pendingChipAction: QuickToggleChip? = null
     private var allApps: List<AppInfo> = emptyList()
     private var currentQuery: String = ""
 
@@ -63,6 +81,17 @@ class MainActivity : AppCompatActivity() {
         if (result.resultCode == Activity.RESULT_OK) finalizeWidgetAddition() else cancelPendingWidget()
     }
 
+    private val shizukuPermissionResultListener = Shizuku.OnRequestPermissionResultListener { requestCode, grantResult ->
+        if (requestCode == ShizukuCommandExecutor.REQUEST_CODE) {
+            if (grantResult == PackageManager.PERMISSION_GRANTED) {
+                pendingChipAction?.let { chip -> executeChipCommand(chip) }
+            } else {
+                Toast.makeText(this, R.string.shizuku_permission_denied, Toast.LENGTH_SHORT).show()
+            }
+            pendingChipAction = null
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
@@ -76,15 +105,35 @@ class MainActivity : AppCompatActivity() {
         categoryPreferences = CategoryPreferences(applicationContext)
         vaultRepository = VaultRepository(applicationContext)
         appSectioner = AppSectioner(categoryPreferences)
+        systemToggleRepository = SystemToggleRepository(applicationContext)
+
+        notificationAccessPreferences = NotificationAccessPreferences(applicationContext)
+
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                NotificationBadgeStore.countsFlow.collect {
+                    renderList()
+                }
+            }
+        }
+
+        recentAppsRepository = RecentAppsRepository(applicationContext)
 
         appWidgetManager = AppWidgetManager.getInstance(this)
         appWidgetHost = AppWidgetHost(this, WIDGET_HOST_ID)
         widgetRepository = WidgetRepository(applicationContext)
 
+        Shizuku.addRequestPermissionResultListener(shizukuPermissionResultListener)
+
         setupAppGrid()
         setupSearch()
         setupWidgetControls()
         setupVaultBiometricButton()
+        setupQuickToggles()
+        setupRecentApps()
+        binding.settingsButton.setOnClickListener {
+            startActivity(Intent(this, SettingsActivity::class.java))
+        }
         restoreSavedWidgets()
         loadApps()
     }
@@ -93,6 +142,8 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
         loadApps()
         updateVaultBiometricButtonVisibility()
+        refreshQuickToggleChips()
+        maybePromptNotificationAccess()
     }
 
     override fun onStart() {
@@ -103,6 +154,11 @@ class MainActivity : AppCompatActivity() {
     override fun onStop() {
         super.onStop()
         appWidgetHost.stopListening()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        Shizuku.removeRequestPermissionResultListener(shizukuPermissionResultListener)
     }
 
     // ---------- App grid & search ----------
@@ -149,6 +205,7 @@ class MainActivity : AppCompatActivity() {
         val hiddenKeys = vaultRepository.getHiddenApps()
         allApps = appRepository.loadInstalledApps().filterNot { it.key in hiddenKeys }
         renderList()
+        refreshRecentApps()
     }
 
     private fun renderList() {
@@ -187,6 +244,8 @@ class MainActivity : AppCompatActivity() {
         try {
             startActivity(intent)
             binding.searchInput.text?.clear()
+            recentAppsRepository.recordLaunch(app.key)
+            refreshRecentApps()
         } catch (exception: ActivityNotFoundException) {
             Toast.makeText(this, getString(R.string.app_launch_failed, app.label), Toast.LENGTH_SHORT).show()
         }
@@ -446,6 +505,157 @@ class MainActivity : AppCompatActivity() {
             }
             .setNegativeButton(R.string.action_close, null)
             .show()
+    }
+
+    // ---------- Quick toggle chips (Shizuku) ----------
+
+    private fun setupQuickToggles() {
+        quickToggleAdapter = QuickToggleAdapter(emptyList()) { chip -> onChipClicked(chip) }
+        binding.quickToggleRow.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+        binding.quickToggleRow.adapter = quickToggleAdapter
+        refreshQuickToggleChips()
+    }
+
+    private fun refreshQuickToggleChips() {
+        quickToggleAdapter.updateChips(buildQuickToggleChips())
+    }
+
+    private fun buildQuickToggleChips(): List<QuickToggleChip> {
+        return listOf(
+            QuickToggleChip(
+                type = QuickToggleType.DEVELOPER_SETTINGS,
+                label = getString(R.string.chip_developer_settings),
+                iconRes = R.drawable.ic_developer_settings,
+                isToggle = false,
+                isActive = systemToggleRepository.isDeveloperSettingsEnabled()
+            ),
+            QuickToggleChip(
+                type = QuickToggleType.KILL_ACTIVITIES,
+                label = getString(R.string.chip_kill_activities),
+                iconRes = R.drawable.ic_kill_activities,
+                isToggle = false,
+                isActive = false
+            ),
+            QuickToggleChip(
+                type = QuickToggleType.SLOW_ANIMATIONS,
+                label = getString(R.string.chip_slow_animations),
+                iconRes = R.drawable.ic_slow_animations,
+                isToggle = true,
+                isActive = systemToggleRepository.isSlowAnimationsEnabled()
+            ),
+            QuickToggleChip(
+                type = QuickToggleType.BIG_FONTS,
+                label = getString(R.string.chip_big_fonts),
+                iconRes = R.drawable.ic_big_fonts,
+                isToggle = true,
+                isActive = systemToggleRepository.isBigFontEnabled()
+            ),
+            QuickToggleChip(
+                type = QuickToggleType.WIRELESS_ADB,
+                label = getString(R.string.chip_wireless_adb),
+                iconRes = R.drawable.ic_wireless_adb,
+                isToggle = true,
+                isActive = systemToggleRepository.isWirelessAdbEnabled()
+            )
+        )
+    }
+
+    private fun onChipClicked(chip: QuickToggleChip) {
+        if (chip.type == QuickToggleType.DEVELOPER_SETTINGS) {
+            try {
+                startActivity(Intent(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS))
+            } catch (exception: ActivityNotFoundException) {
+                Toast.makeText(this, R.string.developer_settings_unavailable, Toast.LENGTH_SHORT).show()
+            }
+            return
+        }
+        runShizukuAction(chip)
+    }
+
+    private fun runShizukuAction(chip: QuickToggleChip) {
+        if (!ShizukuCommandExecutor.isShizukuAvailable()) {
+            Toast.makeText(this, R.string.shizuku_not_running, Toast.LENGTH_LONG).show()
+            return
+        }
+        if (!ShizukuCommandExecutor.isPermissionGranted()) {
+            pendingChipAction = chip
+            ShizukuCommandExecutor.requestPermission()
+            return
+        }
+        executeChipCommand(chip)
+    }
+
+    private fun executeChipCommand(chip: QuickToggleChip) {
+        val command = when (chip.type) {
+            QuickToggleType.KILL_ACTIVITIES -> systemToggleRepository.killAllBackgroundAppsCommand()
+            QuickToggleType.SLOW_ANIMATIONS ->
+                systemToggleRepository.setSlowAnimationsCommand(!systemToggleRepository.isSlowAnimationsEnabled())
+            QuickToggleType.BIG_FONTS ->
+                systemToggleRepository.setBigFontCommand(!systemToggleRepository.isBigFontEnabled())
+            QuickToggleType.WIRELESS_ADB ->
+                systemToggleRepository.setWirelessAdbCommand(!systemToggleRepository.isWirelessAdbEnabled())
+            QuickToggleType.DEVELOPER_SETTINGS -> return
+        }
+
+        lifecycleScope.launch {
+            val result = withContext(Dispatchers.IO) { ShizukuCommandExecutor.execute(command) }
+            if (!result.success) {
+                Toast.makeText(
+                    this@MainActivity,
+                    getString(R.string.shizuku_command_failed, result.output),
+                    Toast.LENGTH_SHORT
+                ).show()
+            } else if (chip.type == QuickToggleType.KILL_ACTIVITIES) {
+                Toast.makeText(this@MainActivity, R.string.kill_activities_done, Toast.LENGTH_SHORT).show()
+            }
+            refreshQuickToggleChips()
+        }
+    }
+
+    private fun isNotificationAccessGranted(): Boolean {
+        val enabledListeners = androidx.core.app.NotificationManagerCompat.getEnabledListenerPackages(this)
+        return enabledListeners.contains(packageName)
+    }
+
+    private fun maybePromptNotificationAccess() {
+        if (isNotificationAccessGranted()) return
+        if (notificationAccessPreferences.hasAskedBefore()) return
+        notificationAccessPreferences.markAsked()
+
+        AlertDialog.Builder(this)
+            .setTitle(R.string.notification_access_title)
+            .setMessage(R.string.notification_access_message)
+            .setPositiveButton(R.string.action_enable) { dialog, _ ->
+                startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
+                dialog.dismiss()
+            }
+            .setNegativeButton(R.string.action_close, null)
+            .show()
+    }
+
+    private fun setupRecentApps() {
+        recentAppsAdapter = RecentAppsAdapter(
+            apps = emptyList(),
+            onAppClick = { app -> launchApp(app) },
+            onAppLongClick = { app ->
+                recentAppsRepository.removeKey(app.key)
+                refreshRecentApps()
+            }
+        )
+        binding.recentAppsRow.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+        binding.recentAppsRow.adapter = recentAppsAdapter
+        binding.clearRecentButton.setOnClickListener {
+            recentAppsRepository.clearAll()
+            refreshRecentApps()
+        }
+    }
+
+    private fun refreshRecentApps() {
+        val keys = recentAppsRepository.getRecentKeys()
+        val appsByKey = allApps.associateBy { it.key }
+        val recentApps = keys.mapNotNull { appsByKey[it] }
+        recentAppsAdapter.updateApps(recentApps)
+        binding.recentAppsSection.visibility = if (recentApps.isEmpty()) View.GONE else View.VISIBLE
     }
 
     companion object {

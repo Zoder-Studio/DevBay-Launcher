@@ -1,6 +1,7 @@
 package com.devbay.launcher.vault
 
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.devbay.launcher.databinding.ItemAppBinding
@@ -22,6 +23,19 @@ class VaultAppAdapter(
         val app = apps[position]
         holder.binding.appIcon.setImageDrawable(app.icon)
         holder.binding.appLabel.text = app.label
+
+        val badgeCount = NotificationBadgeStore.getCounts()[app.packageName] ?: 0
+        if (badgeCount > 0) {
+            holder.binding.appBadge.visibility = View.VISIBLE
+            holder.binding.appBadge.text = if (badgeCount > MAX_BADGE_COUNT) {
+                holder.binding.root.context.getString(R.string.badge_overflow)
+            } else {
+                badgeCount.toString()
+            }
+        } else {
+            holder.binding.appBadge.visibility = View.GONE
+        }
+
         holder.binding.root.setOnClickListener { onAppClick(app) }
         holder.binding.root.setOnLongClickListener {
             onAppLongClick(app)
@@ -34,5 +48,9 @@ class VaultAppAdapter(
     fun updateApps(newApps: List<AppInfo>) {
         apps = newApps
         notifyDataSetChanged()
+    }
+
+    companion object {
+        private const val MAX_BADGE_COUNT = 99
     }
 }
