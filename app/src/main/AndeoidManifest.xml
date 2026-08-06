@@ -61,6 +61,14 @@
             android:theme="@style/Theme.DevBayLauncher" />
 
         <activity
+            android:name=".LockScreenActivity"
+            android:exported="false"
+            android:launchMode="singleInstance"
+            android:excludeFromRecents="true"
+            android:showOnLockScreen="true"
+            android:theme="@style/Theme.DevBayLauncher" />
+
+        <activity
             android:name=".ClipboardActivity"
             android:exported="false"
             android:theme="@style/Theme.DevBayLauncher" />

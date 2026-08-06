@@ -27,6 +27,14 @@ class DevBayLauncherApplication : Application() {
             ContextCompat.RECEIVER_NOT_EXPORTED
         )
 
+        val screenStateReceiver = ScreenStateReceiver()
+        ContextCompat.registerReceiver(
+            this,
+            screenStateReceiver,
+            ScreenStateReceiver.intentFilter(),
+            ContextCompat.RECEIVER_NOT_EXPORTED
+        )
+
         applicationScope.launch {
             val apps = withContext(Dispatchers.Default) {
                 AppRepository(applicationContext).loadInstalledApps()

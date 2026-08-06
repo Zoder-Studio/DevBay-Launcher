@@ -122,4 +122,11 @@
     <string name="gesture_app_not_found">This app is no longer available</string>
     <string name="gesture_panel_unavailable">This panel could not be opened on your device</string>
     <string name="gesture_no_apps_available">No apps available yet</string>
+
+    <string name="lock_screen_battery_format">%1$d%%</string>
+    <string name="lock_screen_ram_format">%1$.1f / %2$.1f GB</string>
+    <string name="lock_screen_separator">•</string>
+    <string name="lock_screen_swipe_hint">Swipe up to unlock</string>
+    <string name="settings_lock_screen_label">Custom Lock Screen</string>
+    <string name="settings_lock_screen_description">Show a custom overlay before the system unlock screen appears. Your real PIN, pattern, or fingerprint still handles authentication.</string>
 </resources>

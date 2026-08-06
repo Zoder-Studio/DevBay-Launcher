@@ -11,6 +11,7 @@ import com.devbay.launcher.databinding.ActivitySettingsBinding
 class SettingsActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivitySettingsBinding
+    private lateinit var lockScreenPreferences: LockScreenPreferences
     private lateinit var themePreferences: ThemePreferences
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -19,6 +20,12 @@ class SettingsActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         themePreferences = ThemePreferences(applicationContext)
+
+        lockScreenPreferences = LockScreenPreferences(applicationContext)
+        binding.lockScreenSwitch.isChecked = lockScreenPreferences.isEnabled()
+        binding.lockScreenSwitch.setOnCheckedChangeListener { _, isChecked ->
+            lockScreenPreferences.setEnabled(isChecked)
+        }
 
         binding.closeButton.setOnClickListener { finish() }
 
