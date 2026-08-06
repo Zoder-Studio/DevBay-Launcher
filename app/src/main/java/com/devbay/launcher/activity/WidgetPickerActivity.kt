@@ -1,4 +1,4 @@
-package com.devbay.launcher
+package com.devbay.launcher.activity
 
 import android.appwidget.AppWidgetManager
 import android.content.Intent

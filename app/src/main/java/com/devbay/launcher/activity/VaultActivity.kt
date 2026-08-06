@@ -1,4 +1,4 @@
-package com.devbay.launcher.vault
+package com.devbay.launcher.activity
 
 import android.content.ActivityNotFoundException
 import android.content.ComponentName
@@ -17,7 +17,6 @@ import com.devbay.launcher.databinding.ActivityVaultBinding
 class VaultActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityVaultBinding
-    private lateinit var appRepository: AppRepository
     private lateinit var vaultRepository: VaultRepository
     private lateinit var vaultAppAdapter: VaultAppAdapter
 
@@ -26,7 +25,6 @@ class VaultActivity : AppCompatActivity() {
         binding = ActivityVaultBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        appRepository = AppRepository(applicationContext)
         vaultRepository = VaultRepository(applicationContext)
 
         vaultAppAdapter = VaultAppAdapter(
@@ -45,7 +43,7 @@ class VaultActivity : AppCompatActivity() {
 
     private fun loadHiddenApps() {
         val hiddenKeys = vaultRepository.getHiddenApps()
-        val hiddenApps = appRepository.loadInstalledApps().filter { it.key in hiddenKeys }
+        val hiddenApps = AppCacheStore.getApps().filter { it.key in hiddenKeys }
         vaultAppAdapter.updateApps(hiddenApps)
         binding.emptyVaultState.visibility = if (hiddenApps.isEmpty()) View.VISIBLE else View.GONE
     }

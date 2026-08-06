@@ -28,6 +28,13 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.view.GestureDetector
+import android.view.MotionEvent
+import android.view.inputmethod.InputMethodManager
+import androidx.core.view.GestureDetectorCompat
+import kotlin.math.abs
 import com.devbay.launcher.databinding.ActivityMainBinding
 import com.devbay.launcher.settings.SettingsActivity
 import kotlinx.coroutines.Dispatchers
@@ -39,7 +46,6 @@ import java.util.Locale
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
-    private lateinit var appRepository: AppRepository
     private lateinit var categoryPreferences: CategoryPreferences
     private lateinit var vaultRepository: VaultRepository
     private lateinit var appSectioner: AppSectioner
@@ -55,6 +61,16 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var recentAppsRepository: RecentAppsRepository
     private lateinit var recentAppsAdapter: RecentAppsAdapter
+
+    private lateinit var clipboardRepository: ClipboardRepository
+    private lateinit var systemClipboardManager: ClipboardManager
+
+    private lateinit var gesturePreferences: GesturePreferences
+    private lateinit var gestureDetector: GestureDetectorCompat
+
+    private val clipboardChangeListener = ClipboardManager.OnPrimaryClipChangedListener {
+        captureCurrentClipboardEntry()
+    }
 
     private var pendingChipAction: QuickToggleChip? = null
     private var allApps: List<AppInfo> = emptyList()
@@ -101,7 +117,6 @@ class MainActivity : AppCompatActivity() {
             if (currentQuery.isNotEmpty()) binding.searchInput.text?.clear()
         }
 
-        appRepository = AppRepository(applicationContext)
         categoryPreferences = CategoryPreferences(applicationContext)
         vaultRepository = VaultRepository(applicationContext)
         appSectioner = AppSectioner(categoryPreferences)
@@ -113,6 +128,14 @@ class MainActivity : AppCompatActivity() {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 NotificationBadgeStore.countsFlow.collect {
                     renderList()
+                }
+            }
+        }
+
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                AppCacheStore.appsFlow.collect { rawApps ->
+                    applyCachedApps(rawApps)
                 }
             }
         }
@@ -134,13 +157,18 @@ class MainActivity : AppCompatActivity() {
         binding.settingsButton.setOnClickListener {
             startActivity(Intent(this, SettingsActivity::class.java))
         }
+        binding.launcherSwitchButton.setOnClickListener { switchDefaultLauncher() }
+        gesturePreferences = GesturePreferences(applicationContext)
+        setupGestureZone()
+        binding.clipboardButton.setOnClickListener {
+            startActivity(Intent(this, ClipboardActivity::class.java))
+        }
         restoreSavedWidgets()
-        loadApps()
     }
 
     override fun onResume() {
         super.onResume()
-        loadApps()
+        refreshFilteredApps()
         updateVaultBiometricButtonVisibility()
         refreshQuickToggleChips()
         maybePromptNotificationAccess()
@@ -149,11 +177,13 @@ class MainActivity : AppCompatActivity() {
     override fun onStart() {
         super.onStart()
         appWidgetHost.startListening()
+        systemClipboardManager.addPrimaryClipChangedListener(clipboardChangeListener)
     }
 
     override fun onStop() {
         super.onStop()
         appWidgetHost.stopListening()
+        systemClipboardManager.removePrimaryClipChangedListener(clipboardChangeListener)
     }
 
     override fun onDestroy() {
@@ -201,11 +231,15 @@ class MainActivity : AppCompatActivity() {
         })
     }
 
-    private fun loadApps() {
+    private fun applyCachedApps(rawApps: List<AppInfo>) {
         val hiddenKeys = vaultRepository.getHiddenApps()
-        allApps = appRepository.loadInstalledApps().filterNot { it.key in hiddenKeys }
+        allApps = rawApps.filterNot { it.key in hiddenKeys }
         renderList()
         refreshRecentApps()
+    }
+
+    private fun refreshFilteredApps() {
+        applyCachedApps(AppCacheStore.getApps())
     }
 
     private fun renderList() {
@@ -270,11 +304,11 @@ class MainActivity : AppCompatActivity() {
                 when (which) {
                     0 -> {
                         if (isPinned) categoryPreferences.unpinApp(app.key) else categoryPreferences.pinApp(app.key)
-                        loadApps()
+                        refreshFilteredApps()
                     }
                     1 -> {
                         if (isTools) categoryPreferences.removeFromTools(app.key) else categoryPreferences.addToTools(app.key)
-                        loadApps()
+                        refreshFilteredApps()
                     }
                     2 -> handleHideApp(app)
                     3 -> openSystemAppInfo(app)
@@ -297,7 +331,7 @@ class MainActivity : AppCompatActivity() {
             .setItems(labels) { dialog, which ->
                 categoryPreferences.unpinApp(pinnedApps[which].key)
                 dialog.dismiss()
-                loadApps()
+                refreshFilteredApps()
             }
             .setNegativeButton(R.string.action_close, null)
             .show()
@@ -325,12 +359,12 @@ class MainActivity : AppCompatActivity() {
         if (!vaultRepository.isVaultConfigured()) {
             showSetupVaultPasswordDialog {
                 vaultRepository.hideApp(app.key)
-                loadApps()
+                refreshFilteredApps()
                 Toast.makeText(this, getString(R.string.app_hidden, app.label), Toast.LENGTH_SHORT).show()
             }
         } else {
             vaultRepository.hideApp(app.key)
-            loadApps()
+            refreshFilteredApps()
             Toast.makeText(this, getString(R.string.app_hidden, app.label), Toast.LENGTH_SHORT).show()
         }
     }
@@ -658,10 +692,112 @@ class MainActivity : AppCompatActivity() {
         binding.recentAppsSection.visibility = if (recentApps.isEmpty()) View.GONE else View.VISIBLE
     }
 
+    private fun switchDefaultLauncher() {
+        try {
+            packageManager.clearPackagePreferredActivities(packageName)
+            val homeIntent = Intent(Intent.ACTION_MAIN).apply {
+                addCategory(Intent.CATEGORY_HOME)
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            }
+            startActivity(homeIntent)
+        } catch (exception: Exception) {
+            try {
+                startActivity(Intent(Settings.ACTION_HOME_SETTINGS))
+            } catch (fallbackException: ActivityNotFoundException) {
+                Toast.makeText(this, R.string.switch_launcher_unavailable, Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun captureCurrentClipboardEntry() {
+        try {
+            val clipData = systemClipboardManager.primaryClip ?: return
+            if (clipData.itemCount == 0) return
+            val text = clipData.getItemAt(0).coerceToText(this)?.toString() ?: return
+            clipboardRepository.addEntry(text)
+        } catch (throwable: Throwable) {
+            // Clipboard read denied because the launcher lost focus; safely ignore.
+        }
+    }
+
+    private fun setupGestureZone() {
+        gestureDetector = GestureDetectorCompat(this, object : GestureDetector.SimpleOnGestureListener() {
+            override fun onDoubleTap(e: MotionEvent): Boolean {
+                executeGestureAction(gesturePreferences.getAction(GestureDirection.DOUBLE_TAP))
+                return true
+            }
+
+            override fun onFling(
+                e1: MotionEvent?,
+                e2: MotionEvent,
+                velocityX: Float,
+                velocityY: Float
+            ): Boolean {
+                if (e1 == null) return false
+                val deltaX = e2.x - e1.x
+                val deltaY = e2.y - e1.y
+                if (abs(deltaX) > abs(deltaY) &&
+                    abs(deltaX) > SWIPE_DISTANCE_THRESHOLD &&
+                    abs(velocityX) > SWIPE_VELOCITY_THRESHOLD
+                ) {
+                    val direction = if (deltaX > 0) GestureDirection.SWIPE_RIGHT else GestureDirection.SWIPE_LEFT
+                    executeGestureAction(gesturePreferences.getAction(direction))
+                    return true
+                }
+                return false
+            }
+        })
+
+        binding.gestureZone.setOnTouchListener { _, event ->
+            gestureDetector.onTouchEvent(event)
+            false
+        }
+    }
+
+    private fun executeGestureAction(action: GestureAction) {
+        when (action) {
+            GestureAction.None -> Unit
+            GestureAction.OpenSearch -> {
+                binding.searchInput.requestFocus()
+                val inputMethodManager = getSystemService(InputMethodManager::class.java)
+                inputMethodManager?.showSoftInput(binding.searchInput, InputMethodManager.SHOW_IMPLICIT)
+            }
+            GestureAction.OpenSettings -> startActivity(Intent(this, SettingsActivity::class.java))
+            GestureAction.OpenClipboard -> startActivity(Intent(this, ClipboardActivity::class.java))
+            GestureAction.OpenNotificationPanel -> expandStatusBarPanel(METHOD_EXPAND_NOTIFICATIONS)
+            GestureAction.OpenQuickSettingsPanel -> expandStatusBarPanel(METHOD_EXPAND_QUICK_SETTINGS)
+            is GestureAction.LaunchApp -> {
+                val app = allApps.firstOrNull {
+                    it.packageName == action.packageName && it.activityName == action.activityName
+                }
+                if (app != null) {
+                    launchApp(app)
+                } else {
+                    Toast.makeText(this, R.string.gesture_app_not_found, Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+    private fun expandStatusBarPanel(methodName: String) {
+        try {
+            val statusBarService = getSystemService("statusbar")
+            val statusBarManagerClass = Class.forName("android.app.StatusBarManager")
+            val method = statusBarManagerClass.getMethod(methodName)
+            method.invoke(statusBarService)
+        } catch (throwable: Throwable) {
+            Toast.makeText(this, R.string.gesture_panel_unavailable, Toast.LENGTH_SHORT).show()
+        }
+    }
+
     companion object {
         private const val SPAN_COUNT = 4
         private const val WIDGET_HOST_ID = 1024
         private const val WIDGET_CARD_WIDTH_DP = 260
         private const val WIDGET_CARD_HEIGHT_DP = 160
+        private const val SWIPE_DISTANCE_THRESHOLD = 100
+        private const val SWIPE_VELOCITY_THRESHOLD = 150
+        private const val METHOD_EXPAND_NOTIFICATIONS = "expandNotificationsPanel"
+        private const val METHOD_EXPAND_QUICK_SETTINGS = "expandSettingsPanel"
     }
 }

@@ -1,4 +1,4 @@
-package com.devbay.launcher.settings
+package com.devbay.launcher.activity
 
 import android.content.Intent
 import android.net.Uri
@@ -25,6 +25,12 @@ class SettingsActivity : AppCompatActivity() {
         bindDeviceInfo()
         bindThemeOptions()
         bindGithubLink()
+        binding.shortcutsRow.setOnClickListener {
+            startActivity(Intent(this, SettingsShortcutsActivity::class.java))
+        }
+        binding.gestureRow.setOnClickListener {
+            startActivity(Intent(this, GestureSettingsActivity::class.java))
+        }
     }
 
     private fun bindDeviceInfo() {

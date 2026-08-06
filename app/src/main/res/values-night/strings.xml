@@ -72,4 +72,54 @@
     <string name="settings_theme_system">Follow system setting</string>
     <string name="settings_links_label">LINKS</string>
     <string name="settings_github_label">GitHub</string>
+
+    <string name="launcher_button_label">LAUNCHER</string>
+    <string name="switch_launcher_unavailable">Could not open launcher switcher</string>
+
+    <string name="clipboard_toolbar_title">Clipboard History</string>
+    <string name="no_clipboard_history">No clipboard history yet</string>
+    <string name="clip_copied">Copied to clipboard</string>
+    <string name="delete_clip_title">Delete this clip?</string>
+    <string name="clear_clipboard_title">Clear all clipboard history?</string>
+
+    <string name="settings_shortcuts_row_label">System Shortcuts</string>
+    <string name="settings_shortcuts_title">System Shortcuts</string>
+    <string name="no_shortcuts_available">No shortcuts available on this device</string>
+    <string name="shortcut_unavailable">This settings page is not available on your device</string>
+    <string name="shortcut_developer_options">Developer Options</string>
+    <string name="shortcut_app_info">App Info</string>
+    <string name="shortcut_usage_access">Usage Access</string>
+    <string name="shortcut_battery">Battery</string>
+    <string name="shortcut_storage">Storage</string>
+    <string name="shortcut_display">Display</string>
+    <string name="shortcut_network">Network</string>
+    <string name="shortcut_wifi">Wi-Fi</string>
+    <string name="shortcut_bluetooth">Bluetooth</string>
+    <string name="shortcut_notifications">Notifications</string>
+    <string name="shortcut_security">Security</string>
+    <string name="shortcut_accessibility">Accessibility</string>
+    <string name="shortcut_sound">Sound</string>
+    <string name="shortcut_date_time">Date &amp; Time</string>
+    <string name="shortcut_about_phone">About Phone</string>
+    <string name="shortcut_home_app">Default Launcher</string>
+
+    <string name="settings_gesture_row_label">Gestures</string>
+    <string name="gesture_settings_title">Gestures</string>
+    <string name="gesture_settings_hint">Swipe left/right or double-tap the top bar (near the LAUNCHER button) to trigger these actions. Vertical swipes still scroll the app list, so they are not assignable.</string>
+    <string name="gesture_swipe_left">Swipe Left</string>
+    <string name="gesture_swipe_right">Swipe Right</string>
+    <string name="gesture_double_tap">Double Tap</string>
+    <string name="gesture_pick_action_title">Choose an action</string>
+    <string name="gesture_pick_app_title">Choose an app</string>
+    <string name="gesture_action_none">None</string>
+    <string name="gesture_action_open_search">Open search</string>
+    <string name="gesture_action_open_settings">Open settings</string>
+    <string name="gesture_action_open_clipboard">Open clipboard history</string>
+    <string name="gesture_action_open_notifications">Open notification panel</string>
+    <string name="gesture_action_open_quick_settings">Open quick settings panel</string>
+    <string name="gesture_action_pick_app">Launch an app…</string>
+    <string name="gesture_action_app_removed">App no longer installed</string>
+    <string name="gesture_app_not_found">This app is no longer available</string>
+    <string name="gesture_panel_unavailable">This panel could not be opened on your device</string>
+    <string name="gesture_no_apps_available">No apps available yet</string>
 </resources>
