@@ -14,6 +14,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "DevBay Launcher"
+rootProject.name = "devbay-launcher"
 include(":app")
 includeBuild("logfox")
