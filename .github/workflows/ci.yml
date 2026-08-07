@@ -30,6 +30,10 @@ jobs:
       - name: Grant execute permission for LogFox gradlew
         run: chmod +x logfox/gradlew
 
+      - name: Patch LogFox Gradle wrapper version
+        run: |
+          sed -i 's#distributionUrl=.*#distributionUrl=https\\://services.gradle.org/distributions/gradle-9.4.1-bin.zip#' logfox/gradle/wrapper/gradle-wrapper.properties
+
       - name: Build LogFox APK
         run: |
           cd logfox
