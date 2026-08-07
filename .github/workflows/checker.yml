@@ -1,0 +1,85 @@
+name: APK Checker
+
+on:
+  workflow_run:
+    workflows: [ "Build APK" ]
+    types: [ completed ]
+  workflow_dispatch:
+    inputs:
+      build_run_id:
+        description: "Run ID of the Build APK workflow to check (leave empty when triggered automatically)"
+        required: false
+
+permissions:
+  actions: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fail fast if build did not succeed
+        if: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.conclusion != 'success' }}
+        run: |
+          echo "::error::Build APK workflow did not succeed (conclusion: ${{ github.event.workflow_run.conclusion }}). No APK to check."
+          exit 1
+
+      - name: Resolve target run id
+        id: resolve
+        run: |
+          RUN_ID="${{ github.event.workflow_run.id }}"
+          if [ -z "$RUN_ID" ]; then
+            RUN_ID="${{ inputs.build_run_id }}"
+          fi
+          if [ -z "$RUN_ID" ]; then
+            echo "::error::No run id available. Provide build_run_id when running manually."
+            exit 1
+          fi
+          echo "run_id=$RUN_ID" >> "$GITHUB_OUTPUT"
+
+      - name: Download debug APK artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: devbay-launcher-debug
+          path: apk-debug
+          run-id: ${{ steps.resolve.outputs.run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Download release APK artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: devbay-launcher-release
+          path: apk-release
+          run-id: ${{ steps.resolve.outputs.run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Verify APK integrity
+        run: |
+          set -e
+          for apk_dir in apk-debug apk-release; do
+            apk_file=$(find "$apk_dir" -name "*.apk" | head -n 1)
+            if [ -z "$apk_file" ]; then
+              echo "::error::No APK found in $apk_dir"
+              exit 1
+            fi
+
+            size=$(stat -c%s "$apk_file")
+            if [ "$size" -lt 1000 ]; then
+              echo "::error::$apk_file is suspiciously small ($size bytes), likely corrupt"
+              exit 1
+            fi
+
+            if ! unzip -tq "$apk_file" > /dev/null; then
+              echo "::error::$apk_file failed zip integrity check"
+              exit 1
+            fi
+
+            if ! unzip -l "$apk_file" | grep -q "AndroidManifest.xml"; then
+              echo "::error::$apk_file is missing AndroidManifest.xml"
+              exit 1
+            fi
+
+            echo "✅ $apk_file passed integrity checks ($size bytes)"
+          done
+
+      - name: Summary
+        run: echo "All APK artifacts verified successfully."

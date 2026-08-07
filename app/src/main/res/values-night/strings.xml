@@ -129,4 +129,58 @@
     <string name="lock_screen_swipe_hint">Swipe up to unlock</string>
     <string name="settings_lock_screen_label">Custom Lock Screen</string>
     <string name="settings_lock_screen_description">Show a custom overlay before the system unlock screen appears. Your real PIN, pattern, or fingerprint still handles authentication.</string>
+
+    <string name="action_view_logcat">View Logcat</string>
+    <string name="action_view_crash">View Crash Log</string>
+    <string name="log_source_logfox">Open in LogFox</string>
+    <string name="log_source_logfox_not_installed">Install LogFox</string>
+    <string name="log_source_shizuku">View via Shizuku (built-in)</string>
+    <string name="log_viewer_logcat_title">Logcat — %1$s</string>
+    <string name="log_viewer_crash_title">Crash Log — %1$s</string>
+    <string name="log_viewer_no_package">No package specified</string>
+
+    <string name="action_add_to_folder">Add to folder</string>
+    <string name="action_remove_from_folder">Remove from folder</string>
+    <string name="add_to_folder_title">Choose a folder</string>
+    <string name="create_new_folder">Create new folder…</string>
+    <string name="folder_name_hint">Folder name</string>
+    <string name="rename_folder_title">Rename folder</string>
+    <string name="delete_folder_title">Delete this folder?</string>
+    <string name="delete_folder_message">Apps inside will move back to the main grid.</string>
+    <string name="empty_folder_message">This folder is empty</string>
+
+    <string name="settings_icon_pack_row_label">Icon Pack</string>
+    <string name="icon_pack_default">Default (App\'s own icons)</string>
+    <string name="no_icon_packs_installed">No icon packs installed. Try Delta Icons, Whicons, or Kaaip from the Play Store.</string>
+
+    <string name="settings_shizuku_pairing_row_label">Pair Shizuku (Wireless ADB)</string>
+    <string name="pairing_title">Pair Shizuku</string>
+    <string name="shizuku_status_installed">Shizuku is installed on this device.</string>
+    <string name="shizuku_status_not_installed">Shizuku is not installed yet.</string>
+    <string name="pairing_steps_title">How to pair</string>
+    <string name="pairing_steps_body">1. Open Wireless debugging in Developer options.\n2. Tap \"Pair device with QR code\" and scan it, or use the pairing code shown.\n3. Once paired and Wireless debugging is on, open Shizuku and tap \"Start via Wireless debugging\".</string>
+    <string name="open_wireless_debugging">Open Wireless Debugging Settings</string>
+    <string name="open_shizuku_app">Open Shizuku App</string>
+    <string name="install_shizuku_app">Install Shizuku App</string>
+    <string name="shizuku_open_failed">Could not open Shizuku app</string>
+
+    <string name="settings_github_monitor_row_label">GitHub Monitor</string>
+    <string name="github_monitor_title">GitHub Monitor</string>
+    <string name="github_token_label">PERSONAL ACCESS TOKEN</string>
+    <string name="github_token_hint">ghp_xxxxxxxxxxxxxxxxxxxx</string>
+    <string name="github_token_empty">Enter a token first</string>
+    <string name="github_token_saved">Token saved</string>
+    <string name="github_add_repo_label">ADD REPOSITORY</string>
+    <string name="github_repo_input_hint">owner/repo</string>
+    <string name="github_add_repo_button">Add Repository</string>
+    <string name="github_invalid_repo_format">Use the format owner/repo</string>
+    <string name="github_sync_now">Sync Now</string>
+    <string name="github_sync_started">Syncing in the background…</string>
+    <string name="github_watched_repos_label">WATCHED REPOSITORIES</string>
+    <string name="github_no_repos_watched">No repositories watched yet</string>
+    <string name="github_open_count_format">%1$d open issues/PRs</string>
+    <string name="github_not_synced_yet">Not synced yet</string>
+    <string name="github_section_label">GITHUB</string>
+    <string name="github_notification_channel_name">GitHub Repo Updates</string>
+    <string name="github_notification_body">%1$d new issue(s)/PR(s)</string>
 </resources>

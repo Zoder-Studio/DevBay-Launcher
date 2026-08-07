@@ -1,13 +1,11 @@
-package com.devbay.launcher.cache
+package com.devbay.launcher
 
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 class PackageChangeReceiver(
     private val applicationScope: CoroutineScope
@@ -16,10 +14,7 @@ class PackageChangeReceiver(
     override fun onReceive(context: Context, intent: Intent) {
         val appContext = context.applicationContext
         applicationScope.launch {
-            val apps = withContext(Dispatchers.Default) {
-                AppRepository(appContext).loadInstalledApps()
-            }
-            AppCacheStore.updateApps(apps)
+            AppCacheRefresher.refresh(appContext)
         }
     }
 

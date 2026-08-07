@@ -2,13 +2,18 @@ package com.devbay.launcher.app
 
 data class AppSection(
     val category: AppCategory,
-    val apps: List<AppInfo>
+    val apps: List<AppInfo>,
+    val folders: List<AppFolder> = emptyList()
 )
 
-class AppSectioner(private val categoryPreferences: CategoryPreferences) {
+class AppSectioner(
+    private val categoryPreferences: CategoryPreferences,
+    private val folderRepository: FolderRepository
+) {
 
     fun buildSections(apps: List<AppInfo>): List<AppSection> {
         val appsByKey = apps.associateBy { it.key }
+        val folderedKeys = folderRepository.getFolders().flatMap { it.appKeys }.toSet()
 
         val pinnedKeys = categoryPreferences.getPinnedPackages().filter { appsByKey.containsKey(it) }
         val toolsKeys = categoryPreferences.getToolsPackages()
@@ -19,14 +24,17 @@ class AppSectioner(private val categoryPreferences: CategoryPreferences) {
 
         val assignedKeys = (pinnedKeys + toolsKeys).toSet()
 
-        val debugApps = apps.filter { it.isDebuggable && it.key !in assignedKeys }
-        val otherApps = apps.filter { it.key !in assignedKeys && !it.isDebuggable }
+        val debugApps = apps.filter { it.isDebuggable && it.key !in assignedKeys && it.key !in folderedKeys }
+        val otherApps = apps.filter {
+            it.key !in assignedKeys && !it.isDebuggable && it.key !in folderedKeys
+        }
+        val otherFolders = folderRepository.getFolders()
 
         val sections = mutableListOf<AppSection>()
         if (debugApps.isNotEmpty()) sections.add(AppSection(AppCategory.DEBUG, debugApps))
         if (pinnedApps.isNotEmpty()) sections.add(AppSection(AppCategory.PINNED, pinnedApps))
         if (toolsApps.isNotEmpty()) sections.add(AppSection(AppCategory.TOOLS, toolsApps))
-        sections.add(AppSection(AppCategory.OTHER, otherApps))
+        sections.add(AppSection(AppCategory.OTHER, otherApps, otherFolders))
 
         return sections
     }

@@ -1,4 +1,4 @@
-package com.devbay.launcher.cache
+package com.devbay.launcher.app
 
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

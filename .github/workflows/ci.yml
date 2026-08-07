@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+    branches: [ "main" ]
+    tags: [ "v*.*.*" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "17"
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Grant execute permission for LogFox gradlew
+        run: chmod +x logfox/gradlew
+
+      - name: Build LogFox APK
+        run: |
+          cd logfox
+          ./gradlew assembleDebug --stacktrace
+
+      - name: Upload LogFox APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: logfox-companion
+          path: logfox/app/build/outputs/apk/**/*.apk
+
+      - name: Install Andeoid SDK
+        uses: ./.github/actions/setup-sdk
+
+      - name: Install Android SDK 35 components
+        run: |
+          sdkmanager "platforms;android-35" "build-tools;35.0.0"
+
+      - name: Run lint
+        run: ./gradlew lintDebug --stacktrace
+
+      - name: Run unit tests
+        run: ./gradlew testDebugUnitTest --stacktrace
+
+      - name: Compile debug sources
+        run: ./gradlew compileDebugKotlin --stacktrace

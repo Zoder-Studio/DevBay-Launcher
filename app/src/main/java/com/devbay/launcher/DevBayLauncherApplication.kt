@@ -7,7 +7,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 class DevBayLauncherApplication : Application() {
 
@@ -36,10 +35,7 @@ class DevBayLauncherApplication : Application() {
         )
 
         applicationScope.launch {
-            val apps = withContext(Dispatchers.Default) {
-                AppRepository(applicationContext).loadInstalledApps()
-            }
-            AppCacheStore.updateApps(apps)
+            AppCacheRefresher.refresh(applicationContext)
         }
     }
 }

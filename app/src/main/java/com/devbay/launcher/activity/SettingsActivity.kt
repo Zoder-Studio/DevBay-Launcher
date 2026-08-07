@@ -38,6 +38,15 @@ class SettingsActivity : AppCompatActivity() {
         binding.gestureRow.setOnClickListener {
             startActivity(Intent(this, GestureSettingsActivity::class.java))
         }
+        binding.iconPackRow.setOnClickListener {
+            startActivity(Intent(this, IconPackPickerActivity::class.java))
+        }
+        binding.shizukuPairingRow.setOnClickListener {
+            startActivity(Intent(this, ShizukuPairingActivity::class.java))
+        }
+        binding.githubMonitorRow.setOnClickListener {
+            startActivity(Intent(this, GitHubMonitorActivity::class.java))
+        }
     }
 
     private fun bindDeviceInfo() {

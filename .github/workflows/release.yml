@@ -1,0 +1,64 @@
+name: Release
+
+on:
+  workflow_run:
+    workflows: [ "Build APK" ]
+    types: [ completed ]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    if: >
+      github.event.workflow_run.conclusion == 'success' &&
+      startsWith(github.event.workflow_run.head_branch, 'v')
+
+    steps:
+      - name: Download release APK artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: devbay-launcher-release
+          path: apk-release
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install Android SDK build-tools
+        run: |
+          yes | sdkmanager --licenses > /dev/null || true
+          sdkmanager "build-tools;35.0.0"
+
+      - name: Decode signing keystore
+        run: echo "${{ secrets.RELEASE_KEYSTORE_BASE64 }}" | base64 -d > release.keystore
+
+      - name: Align and sign release APK
+        run: |
+          set -e
+          APK_UNSIGNED=$(find apk-release -name "*.apk" | head -n 1)
+          BUILD_TOOLS="$ANDROID_HOME/build-tools/35.0.0"
+          TAG_NAME="${{ github.event.workflow_run.head_branch }}"
+
+          "$BUILD_TOOLS/zipalign" -v -p 4 "$APK_UNSIGNED" "DevBayLauncher-$TAG_NAME-aligned.apk"
+
+          "$BUILD_TOOLS/apksigner" sign \
+            --ks release.keystore \
+            --ks-key-alias "${{ secrets.RELEASE_KEY_ALIAS }}" \
+            --ks-pass pass:"${{ secrets.RELEASE_KEYSTORE_PASSWORD }}" \
+            --key-pass pass:"${{ secrets.RELEASE_KEY_PASSWORD }}" \
+            --out "DevBayLauncher-$TAG_NAME.apk" \
+            "DevBayLauncher-$TAG_NAME-aligned.apk"
+
+          "$BUILD_TOOLS/apksigner" verify "DevBayLauncher-$TAG_NAME.apk"
+
+      - name: Remove keystore from runner
+        if: always()
+        run: rm -f release.keystore
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.workflow_run.head_branch }}
+          name: DevBay Launcher ${{ github.event.workflow_run.head_branch }}
+          files: DevBayLauncher-${{ github.event.workflow_run.head_branch }}.apk
+          generate_release_notes: true

@@ -1,2 +1,4 @@
 build/
 .gradle/
+releaae.keystore
+release.keystore.base64

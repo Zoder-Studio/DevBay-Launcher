@@ -1,0 +1,67 @@
+name: Version Tag
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump_type:
+        description: "Version part to bump"
+        required: true
+        default: "patch"
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+permissions:
+  contents: write
+
+jobs:
+  create-tag:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Compute next version tag
+        id: next
+        run: |
+          set -e
+          LATEST_TAG=$(git tag --list "v*.*.*" | sort -V | tail -n 1)
+
+          if [ -z "$LATEST_TAG" ]; then
+            MAJOR=0; MINOR=0; PATCH=0
+          else
+            VERSION="${LATEST_TAG#v}"
+            IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+          fi
+
+          case "${{ inputs.bump_type }}" in
+            major) MAJOR=$((MAJOR+1)); MINOR=0; PATCH=0 ;;
+            minor) MINOR=$((MINOR+1)); PATCH=0 ;;
+            patch) PATCH=$((PATCH+1)) ;;
+          esac
+
+          NEW_TAG="v$MAJOR.$MINOR.$PATCH"
+
+          if git rev-parse "$NEW_TAG" >/dev/null 2>&1; then
+            echo "::error::Tag $NEW_TAG already exists"
+            exit 1
+          fi
+
+          echo "new_tag=$NEW_TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Create and push tag
+        run: |
+          git tag "${{ steps.next.outputs.new_tag }}"
+          git push origin "${{ steps.next.outputs.new_tag }}"
+
+      - name: Summary
+        run: echo "Created and pushed tag ${{ steps.next.outputs.new_tag }}"

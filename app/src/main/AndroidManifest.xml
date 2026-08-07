@@ -3,11 +3,25 @@
 
     <uses-permission android:name="android.permission.USE_BIOMETRIC" />
     <uses-permission android:name="android.permission.EXPAND_STATUS_BAR" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <queries>
         <intent>
             <action android:name="android.intent.action.MAIN" />
             <category android:name="android.intent.category.LAUNCHER" />
+        </intent>
+        <intent>
+            <action android:name="com.novalauncher.THEME" />
+        </intent>
+        <intent>
+            <action android:name="com.anddoes.launcher.THEME" />
+        </intent>
+        <intent>
+            <action android:name="com.teslacoilsw.launcher.THEME" />
+        </intent>
+        <intent>
+            <action android:name="org.adw.launcher.THEMES" />
         </intent>
     </queries>
 
@@ -66,6 +80,31 @@
             android:launchMode="singleInstance"
             android:excludeFromRecents="true"
             android:showOnLockScreen="true"
+            android:theme="@style/Theme.DevBayLauncher" />
+
+        <activity
+            android:name=".LogViewerDialogActivity"
+            android:exported="false"
+            android:theme="@style/Theme.DevBayLauncher" />
+
+        <activity
+            android:name=".FolderContentsActivity"
+            android:exported="false"
+            android:theme="@style/Theme.DevBayLauncher" />
+
+        <activity
+            android:name=".IconPackPickerActivity"
+            android:exported="false"
+            android:theme="@style/Theme.DevBayLauncher" />
+
+        <activity
+            android:name=".ShizukuPairingActivity"
+            android:exported="false"
+            android:theme="@style/Theme.DevBayLauncher" />
+
+        <activity
+            android:name=".GitHubMonitorActivity"
+            android:exported="false"
             android:theme="@style/Theme.DevBayLauncher" />
 
         <activity

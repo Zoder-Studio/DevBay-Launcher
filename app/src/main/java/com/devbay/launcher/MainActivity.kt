@@ -48,6 +48,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private lateinit var categoryPreferences: CategoryPreferences
     private lateinit var vaultRepository: VaultRepository
+    private lateinit var folderRepository: FolderRepository
     private lateinit var appSectioner: AppSectioner
     private lateinit var launcherAdapter: LauncherAdapter
 
@@ -67,6 +68,9 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var gesturePreferences: GesturePreferences
     private lateinit var gestureDetector: GestureDetectorCompat
+
+    private lateinit var gitHubPreferences: GitHubPreferences
+    private lateinit var gitHubHomeAdapter: GitHubHomeAdapter
 
     private val clipboardChangeListener = ClipboardManager.OnPrimaryClipChangedListener {
         captureCurrentClipboardEntry()
@@ -118,8 +122,9 @@ class MainActivity : AppCompatActivity() {
         }
 
         categoryPreferences = CategoryPreferences(applicationContext)
+        folderRepository = FolderRepository(applicationContext)
         vaultRepository = VaultRepository(applicationContext)
-        appSectioner = AppSectioner(categoryPreferences)
+        appSectioner = AppSectioner(categoryPreferences, folderRepository)
         systemToggleRepository = SystemToggleRepository(applicationContext)
 
         notificationAccessPreferences = NotificationAccessPreferences(applicationContext)
@@ -141,6 +146,10 @@ class MainActivity : AppCompatActivity() {
         }
 
         recentAppsRepository = RecentAppsRepository(applicationContext)
+        clipboardRepository = ClipboardRepository(applicationContext)
+        systemClipboardManager = getSystemService(ClipboardManager::class.java)
+        gitHubPreferences = GitHubPreferences(applicationContext)
+        setupGitHubSection()
 
         appWidgetManager = AppWidgetManager.getInstance(this)
         appWidgetHost = AppWidgetHost(this, WIDGET_HOST_ID)
@@ -172,6 +181,7 @@ class MainActivity : AppCompatActivity() {
         updateVaultBiometricButtonVisibility()
         refreshQuickToggleChips()
         maybePromptNotificationAccess()
+        refreshGitHubSection()
     }
 
     override fun onStart() {
@@ -198,6 +208,8 @@ class MainActivity : AppCompatActivity() {
             items = emptyList(),
             onAppClick = { app -> launchApp(app) },
             onAppLongClick = { app -> openAppOptions(app) },
+            onFolderClick = { folder -> openFolder(folder) },
+            onFolderLongClick = { folder -> openFolder(folder) },
             onEditPinnedClick = { openPinnedEditor() }
         )
 
@@ -211,6 +223,13 @@ class MainActivity : AppCompatActivity() {
         binding.appGrid.layoutManager = layoutManager
         binding.appGrid.adapter = launcherAdapter
         binding.appGrid.setHasFixedSize(true)
+    }
+
+    private fun openFolder(folder: AppFolder) {
+        val intent = Intent(this, FolderContentsActivity::class.java).apply {
+            putExtra(FolderContentsActivity.EXTRA_FOLDER_ID, folder.id)
+        }
+        startActivity(intent)
     }
 
     private fun setupSearch() {
@@ -252,7 +271,14 @@ class MainActivity : AppCompatActivity() {
         val sections = appSectioner.buildSections(allApps)
         val items = mutableListOf<LauncherListItem>()
         for (section in sections) {
-            items.add(LauncherListItem.Header(section.category, section.apps.size))
+            val totalCount = section.apps.size + section.folders.size
+            items.add(LauncherListItem.Header(section.category, totalCount))
+
+            section.folders.forEach { folder ->
+                val appsByKey = allApps.associateBy { it.key }
+                val previewApps = folder.appKeys.take(4).mapNotNull { appsByKey[it] }
+                items.add(LauncherListItem.FolderItem(folder, previewApps))
+            }
             items.addAll(section.apps.map { LauncherListItem.AppItem(it) })
         }
         return items
@@ -288,13 +314,23 @@ class MainActivity : AppCompatActivity() {
     private fun openAppOptions(app: AppInfo) {
         val isPinned = categoryPreferences.isPinned(app.key)
         val isTools = categoryPreferences.isTools(app.key)
+        val currentFolder = folderRepository.findFolderContaining(app.key)
 
         val pinLabel = getString(if (isPinned) R.string.action_unpin else R.string.action_pin)
         val toolsLabel = getString(if (isTools) R.string.action_remove_tools else R.string.action_add_tools)
+        val folderLabel = if (currentFolder != null) {
+            getString(R.string.action_remove_from_folder)
+        } else {
+            getString(R.string.action_add_to_folder)
+        }
+
         val options = arrayOf(
             pinLabel,
             toolsLabel,
+            folderLabel,
             getString(R.string.action_hide_app),
+            getString(R.string.action_view_logcat),
+            getString(R.string.action_view_crash),
             getString(R.string.action_app_info)
         )
 
@@ -310,12 +346,94 @@ class MainActivity : AppCompatActivity() {
                         if (isTools) categoryPreferences.removeFromTools(app.key) else categoryPreferences.addToTools(app.key)
                         refreshFilteredApps()
                     }
-                    2 -> handleHideApp(app)
-                    3 -> openSystemAppInfo(app)
+                    2 -> {
+                        if (currentFolder != null) {
+                            folderRepository.removeAppFromFolder(currentFolder.id, app.key)
+                            refreshFilteredApps()
+                        } else {
+                            showFolderPicker(app)
+                        }
+                    }
+                    3 -> handleHideApp(app)
+                    4 -> openLogAccessPicker(app, isCrashMode = false)
+                    5 -> openLogAccessPicker(app, isCrashMode = true)
+                    6 -> openSystemAppInfo(app)
                 }
                 dialog.dismiss()
             }
             .show()
+    }
+
+    private fun showFolderPicker(app: AppInfo) {
+        val existingFolders = folderRepository.getFolders()
+        val options = existingFolders.map { it.name } + getString(R.string.create_new_folder)
+
+        AlertDialog.Builder(this)
+            .setTitle(R.string.add_to_folder_title)
+            .setItems(options.toTypedArray()) { dialog, which ->
+                dialog.dismiss()
+                if (which == existingFolders.size) {
+                    showCreateFolderDialog(app)
+                } else {
+                    folderRepository.addAppToFolder(existingFolders[which].id, app.key)
+                    refreshFilteredApps()
+                }
+            }
+            .show()
+    }
+
+    private fun showCreateFolderDialog(app: AppInfo) {
+        val input = EditText(this)
+        input.hint = getString(R.string.folder_name_hint)
+
+        AlertDialog.Builder(this)
+            .setTitle(R.string.create_new_folder)
+            .setView(input)
+            .setPositiveButton(R.string.action_save) { dialog, _ ->
+                val name = input.text.toString().trim()
+                if (name.isNotBlank()) {
+                    folderRepository.createFolder(name, app.key)
+                    refreshFilteredApps()
+                }
+                dialog.dismiss()
+            }
+            .setNegativeButton(R.string.action_close, null)
+            .show()
+    }
+
+    private fun openLogAccessPicker(app: AppInfo, isCrashMode: Boolean) {
+        val logFoxInstalled = LogViewerLauncher.isLogFoxInstalled(this)
+        val options = if (logFoxInstalled) {
+            arrayOf(getString(R.string.log_source_logfox), getString(R.string.log_source_shizuku))
+        } else {
+            arrayOf(getString(R.string.log_source_logfox_not_installed), getString(R.string.log_source_shizuku))
+        }
+
+        AlertDialog.Builder(this)
+            .setTitle(if (isCrashMode) R.string.action_view_crash else R.string.action_view_logcat)
+            .setItems(options) { dialog, which ->
+                dialog.dismiss()
+                when (which) {
+                    0 -> {
+                        if (logFoxInstalled) {
+                            LogViewerLauncher.openLogFox(this)
+                        } else {
+                            LogViewerLauncher.openLogFoxOnPlayStore(this)
+                        }
+                    }
+                    1 -> openShizukuLogViewer(app, isCrashMode)
+                }
+            }
+            .show()
+    }
+
+    private fun openShizukuLogViewer(app: AppInfo, isCrashMode: Boolean) {
+        val intent = Intent(this, LogViewerDialogActivity::class.java).apply {
+            putExtra(LogViewerDialogActivity.EXTRA_PACKAGE_NAME, app.packageName)
+            putExtra(LogViewerDialogActivity.EXTRA_APP_LABEL, app.label)
+            putExtra(LogViewerDialogActivity.EXTRA_IS_CRASH_MODE, isCrashMode)
+        }
+        startActivity(intent)
     }
 
     private fun openPinnedEditor() {
@@ -788,6 +906,21 @@ class MainActivity : AppCompatActivity() {
         } catch (throwable: Throwable) {
             Toast.makeText(this, R.string.gesture_panel_unavailable, Toast.LENGTH_SHORT).show()
         }
+    }
+
+    private fun setupGitHubSection() {
+        gitHubHomeAdapter = GitHubHomeAdapter(emptyList()) { repo ->
+            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/${repo.fullName}")))
+        }
+        binding.githubRepoRow.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+        binding.githubRepoRow.adapter = gitHubHomeAdapter
+        refreshGitHubSection()
+    }
+
+    private fun refreshGitHubSection() {
+        val repos = gitHubPreferences.getWatchedRepos()
+        gitHubHomeAdapter.updateRepos(repos)
+        binding.githubSection.visibility = if (repos.isEmpty()) View.GONE else View.VISIBLE
     }
 
     companion object {
