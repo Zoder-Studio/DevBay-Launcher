@@ -32,7 +32,16 @@ jobs:
 
       - name: Patch LogFox Gradle wrapper version
         run: |
-          sed -i 's#distributionUrl=.*#distributionUrl=https\\://services.gradle.org/distributions/gradle-9.4.1-bin.zip#' logfox/gradle/wrapper/gradle-wrapper.properties
+          cat > logfox/gradle/wrapper/gradle-wrapper.properties << 'EOF'
+          distributionBase=GRADLE_USER_HOME
+          distributionPath=wrapper/dists
+          distributionUrl=https\://services.gradle.org/distributions/gradle-9.4.1-bin.zip
+          zipStoreBase=GRADLE_USER_HOME
+          zipStorePath=wrapper/dists
+          EOF
+
+      - name: Verify patched wrapper file
+        run: cat logfox/gradle/wrapper/gradle-wrapper.properties
 
       - name: Build LogFox APK
         run: |
