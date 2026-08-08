@@ -4,6 +4,7 @@ on:
   workflow_run:
     workflows: [ "Build APK" ]
     types: [ completed ]
+  workflows_dispatch:
 
 permissions:
   contents: write
@@ -11,12 +12,30 @@ permissions:
 jobs:
   release:
     runs-on: ubuntu-latest
-    if: >
-      github.event.workflow_run.conclusion == 'success' &&
-      startsWith(github.event.workflow_run.head_branch, 'v')
+    if: github.event.workflow_run.conclusion == 'success'
 
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          fetch-depth: 0
+
+      - name: Resolve tag pointing at this commit
+        id: resolve_tag
+        run: |
+          TAG_NAME=$(git tag --points-at "${{ github.event.workflow_run.head_sha }}" | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -n1)
+          if [ -z "$TAG_NAME" ]; then
+            echo "No version tag found on this commit — skipping release."
+            echo "should_release=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Found tag: $TAG_NAME"
+            echo "should_release=true" >> "$GITHUB_OUTPUT"
+            echo "tag_name=$TAG_NAME" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Download release APK artifact
+        if: steps.resolve_tag.outputs.should_release == 'true'
         uses: actions/download-artifact@v4
         with:
           name: devbay-launcher-release
@@ -25,19 +44,22 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install Android SDK build-tools
+        if: steps.resolve_tag.outputs.should_release == 'true'
         run: |
           yes | sdkmanager --licenses > /dev/null || true
           sdkmanager "build-tools;35.0.0"
 
       - name: Decode signing keystore
+        if: steps.resolve_tag.outputs.should_release == 'true'
         run: echo "${{ secrets.RELEASE_KEYSTORE_BASE64 }}" | base64 -d > release.keystore
 
       - name: Align and sign release APK
+        if: steps.resolve_tag.outputs.should_release == 'true'
         run: |
           set -e
           APK_UNSIGNED=$(find apk-release -name "*.apk" | head -n 1)
           BUILD_TOOLS="$ANDROID_HOME/build-tools/35.0.0"
-          TAG_NAME="${{ github.event.workflow_run.head_branch }}"
+          TAG_NAME="${{ steps.reslove_tag.outputs.tag_name }}"
 
           "$BUILD_TOOLS/zipalign" -v -p 4 "$APK_UNSIGNED" "DevBayLauncher-$TAG_NAME-aligned.apk"
 
@@ -56,9 +78,10 @@ jobs:
         run: rm -f release.keystore
 
       - name: Create GitHub Release
+        if: steps.resolve_tag.outputs.should_release == 'true'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.event.workflow_run.head_branch }}
-          name: DevBay Launcher ${{ github.event.workflow_run.head_branch }}
-          files: DevBayLauncher-${{ github.event.workflow_run.head_branch }}.apk
+          tag_name: ${{ steps.resolve_tag.outputs.tag_name }}
+          name: DevBay Launcher ${{ steps.resolve_tag.outputs.tag_name }}
+          files: DevBayLauncher-${{ steps.resolve_tag.outputs.tag_name }}.apk
           generate_release_notes: true
