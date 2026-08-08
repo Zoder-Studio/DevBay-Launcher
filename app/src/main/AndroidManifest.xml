@@ -50,32 +50,32 @@
         </activity>
 
         <activity
-            android:name=".VaultActivity"
+            android:name=".activity.VaultActivity"
             android:exported="false"
             android:theme="@style/Theme.DevBayLauncher" />
 
         <activity
-            android:name=".WidgetPickerActivity"
+            android:name=".activity.WidgetPickerActivity"
             android:exported="false"
             android:theme="@style/Theme.DevBayLauncher" />
 
         <activity
-            android:name=".SettingsActivity"
+            android:name=".activity.SettingsActivity"
             android:exported="false"
             android:theme="@style/Theme.DevBayLauncher" />
 
         <activity
-            android:name=".SettingsShortcutsActivity"
+            android:name=".activity.SettingsShortcutsActivity"
             android:exported="false"
             android:theme="@style/Theme.DevBayLauncher" />
 
         <activity
-            android:name=".GestureSettingsActivity"
+            android:name=".activity.GestureSettingsActivity"
             android:exported="false"
             android:theme="@style/Theme.DevBayLauncher" />
 
         <activity
-            android:name=".LockScreenActivity"
+            android:name=".activity.LockScreenActivity"
             android:exported="false"
             android:launchMode="singleInstance"
             android:excludeFromRecents="true"
@@ -83,32 +83,32 @@
             android:theme="@style/Theme.DevBayLauncher" />
 
         <activity
-            android:name=".LogViewerDialogActivity"
+            android:name=".activity.LogViewerDialogActivity"
             android:exported="false"
             android:theme="@style/Theme.DevBayLauncher" />
 
         <activity
-            android:name=".FolderContentsActivity"
+            android:name=".activity.FolderContentsActivity"
             android:exported="false"
             android:theme="@style/Theme.DevBayLauncher" />
 
         <activity
-            android:name=".IconPackPickerActivity"
+            android:name=".activity.IconPackPickerActivity"
             android:exported="false"
             android:theme="@style/Theme.DevBayLauncher" />
 
         <activity
-            android:name=".ShizukuPairingActivity"
+            android:name=".activity.ShizukuPairingActivity"
             android:exported="false"
             android:theme="@style/Theme.DevBayLauncher" />
 
         <activity
-            android:name=".GitHubMonitorActivity"
+            android:name=".activity.GithubMonitorActivity"
             android:exported="false"
             android:theme="@style/Theme.DevBayLauncher" />
 
         <activity
-            android:name=".ClipboardActivity"
+            android:name=".activity.ClipboardActivity"
             android:exported="false"
             android:theme="@style/Theme.DevBayLauncher" />
 
@@ -121,7 +121,7 @@
             android:permission="android.permission.INTERACT_ACROSS_USERS_FULL" />
 
         <service
-            android:name=".DevBayNotificationListenerService"
+            android:name=".notification.DevBayNotificationListenerService"
             android:exported="true"
             android:label="@string/app_name"
             android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">

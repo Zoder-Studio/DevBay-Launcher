@@ -2,6 +2,9 @@
 
 An Android launcher built for developers, by a developer. App-drawer-centric home screen with quick access to the tools you actually use every day — system toggles, widgets, gestures, and a companion logcat/crash viewer, all without leaving your home screen.
 
+<div align="center">
+  [![Netlify Status](https://api.netlify.com/api/v1/badges/0058dcd7-e63f-439a-9f1f-7ecf51fae4ae/deploy-status)](https://app.netlify.com/projects/devbay-launcher/deploys)
+</div>
 ## Features
 
 **Core**

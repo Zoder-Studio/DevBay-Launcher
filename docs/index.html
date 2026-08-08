@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DevBay Launcher — An Android launcher built for developers</title>
+  <meta name="description" content="DevBay Launcher: an app-drawer-centric Android launcher with Shizuku quick toggles, hidden app vault, GitHub monitoring, and more — built for developers." />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%237C5CFC%22/><text x=%2250%22 y=%2268%22 font-size=%2260%22 text-anchor=%22middle%22 fill=%22white%22 font-family=%22monospace%22>D</text></svg>" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="container topbar-inner">
+      <div class="brand">
+        <span class="brand-mark">D</span>
+        <span class="brand-name">DevBay Launcher</span>
+      </div>
+      <nav class="nav-links">
+        <a href="#docs">Docs</a>
+        <a href="#features">Features</a>
+        <a href="https://github.com/Zoder-Studio/DevBay-Launcher" target="_blank" rel="noopener">GitHub</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="container hero-inner">
+        <p class="eyebrow">// for developers, by a developer</p>
+        <h1>An Android launcher that<br />actually understands devs.</h1>
+        <p class="hero-sub">
+          App-drawer-first home screen, Shizuku quick toggles, a hidden app vault,
+          GitHub repo monitoring, and a companion logcat viewer — all without
+          leaving your home screen.
+        </p>
+        <div class="hero-actions">
+          <a id="download-btn" class="btn btn-primary" href="#" data-placeholder="true">
+            <span class="btn-icon">&#8681;</span> Download APK
+          </a>
+          <a class="btn btn-ghost" href="#docs">Read the docs</a>
+        </div>
+        <p class="hero-note">Android 8.0+ &middot; Free &amp; open source &middot; GPL-3.0</p>
+      </div>
+    </section>
+
+    <section id="docs" class="docs">
+      <div class="container">
+        <p class="section-eyebrow">Documentation</p>
+        <h2>Getting started</h2>
+
+        <div class="docs-grid">
+          <div class="docs-card">
+            <span class="docs-step">01</span>
+            <h3>Install the APK</h3>
+            <p>
+              Grab the latest signed release from the
+              <a href="https://github.com/Zoder-Studio/DevBay-Launcher/releases" target="_blank" rel="noopener">GitHub Releases</a>
+              page and install it like any other APK. You may need to allow installs
+              from unknown sources for your browser or file manager.
+            </p>
+          </div>
+
+          <div class="docs-card">
+            <span class="docs-step">02</span>
+            <h3>Set as your default launcher</h3>
+            <p>
+              Press the Home button, choose <strong>DevBay Launcher</strong> from the
+              chooser, and tap <strong>Always</strong>. You can switch back anytime with
+              the <strong>LAUNCHER</strong> button at the top of the home screen.
+            </p>
+          </div>
+
+          <div class="docs-card">
+            <span class="docs-step">03</span>
+            <h3>Install Shizuku (optional, recommended)</h3>
+            <p>
+              Quick toggle chips (Kill Activities, Slow Animations, Big Fonts,
+              Wireless ADB) and the built-in logcat/crash viewer run through
+              <a href="https://shizuku.rikka.app/" target="_blank" rel="noopener">Shizuku</a>.
+              Install it, then open <strong>Settings &rarr; Pair Shizuku</strong> inside
+              DevBay Launcher for step-by-step pairing instructions.
+            </p>
+          </div>
+
+          <div class="docs-card">
+            <span class="docs-step">04</span>
+            <h3>Unlock the hidden vault</h3>
+            <p>
+              Long-press any app &rarr; <strong>Hide app</strong> to set up a vault
+              password the first time. After that, type the password directly into
+              the search bar anytime to jump straight into your hidden apps.
+            </p>
+          </div>
+
+          <div class="docs-card">
+            <span class="docs-step">05</span>
+            <h3>Set up gestures</h3>
+            <p>
+              Open <strong>Settings &rarr; Gestures</strong> to map swipe-left,
+              swipe-right, and double-tap on the top bar to search, settings,
+              clipboard, notification panel, quick settings, or any installed app.
+            </p>
+          </div>
+
+          <div class="docs-card">
+            <span class="docs-step">06</span>
+            <h3>Monitor a GitHub repo</h3>
+            <p>
+              Open <strong>Settings &rarr; GitHub Monitor</strong>, optionally add a
+              personal access token for a higher rate limit, then add any
+              <code>owner/repo</code> to get notified about new issues and PRs.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="features" class="features">
+      <div class="container">
+        <p class="section-eyebrow">Showcase</p>
+        <h2>Everything a dev launcher should have</h2>
+
+        <div class="features-grid">
+          <div class="feature-card">
+            <h3>App drawer, sectioned</h3>
+            <p>DEBUG, PINNED, TOOLS, and OTHER — automatically sorted, with fuzzy search across everything.</p>
+          </div>
+          <div class="feature-card">
+            <h3>Shizuku quick toggles</h3>
+            <p>Kill background activities, slow animations, big fonts, and wireless ADB — one tap, no menus.</p>
+          </div>
+          <div class="feature-card">
+            <h3>Hidden app vault</h3>
+            <p>Password, fingerprint, or face unlock. Type your password into the search bar to open it instantly.</p>
+          </div>
+          <div class="feature-card">
+            <h3>App folders</h3>
+            <p>Group apps into folders right on the home screen, QuickStep-style.</p>
+          </div>
+          <div class="feature-card">
+            <h3>Icon pack support</h3>
+            <p>Standard <code>appfilter.xml</code> format — works with Delta Icons, Whicons, Kaaip, and more.</p>
+          </div>
+          <div class="feature-card">
+            <h3>Custom gestures</h3>
+            <p>Swipe left, swipe right, or double-tap the top bar — mapped to any action or any app.</p>
+          </div>
+          <div class="feature-card">
+            <h3>Home-screen widgets</h3>
+            <p>Full <code>AppWidgetHost</code> support — add, resize, and remove real Android widgets.</p>
+          </div>
+          <div class="feature-card">
+            <h3>Notification badges</h3>
+            <p>Real-time unread counts on every app icon, with an opt-in permission prompt.</p>
+          </div>
+          <div class="feature-card">
+            <h3>Clipboard history</h3>
+            <p>Encrypted local history of everything you copy — tap to copy again, long-press to delete.</p>
+          </div>
+          <div class="feature-card">
+            <h3>Logcat &amp; crash viewer</h3>
+            <p>Built-in Shizuku-based viewer, or hand it off to <a href="https://github.com/F0x1d/LogFox" target="_blank" rel="noopener">LogFox</a> if it's installed.</p>
+          </div>
+          <div class="feature-card">
+            <h3>GitHub repo monitor</h3>
+            <p>Background sync with notifications for new issues and PRs on any repo you watch.</p>
+          </div>
+          <div class="feature-card">
+            <h3>Custom lock screen</h3>
+            <p>An overlay with clock, battery, and RAM — your real PIN/pattern/fingerprint still handles unlock.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="cta">
+      <div class="container cta-inner">
+        <h2>Source available. GPL-3.0 licensed.</h2>
+        <p>Built in the open, buildable from source, verifiable end to end.</p>
+        <a class="btn btn-primary" href="https://github.com/Zoder-Studio/DevBay-Launcher/releases" target="_blank" rel="noopener">
+          <span class="btn-icon">&#9733;</span> View releases on GitHub
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-inner">
+      <span>DevBay Launcher &middot; GPL-3.0 &middot; includes LogFox as a companion app</span>
+      <a href="https://github.com/Zoder-Studio/DevBay-Launcher" target="_blank" rel="noopener">github.com/Zoder-Studio/DevBay-Launcher</a>
+    </div>
+  </footer>
+
+  <script src="js/script.js"></script>
+</body>
+</html>
