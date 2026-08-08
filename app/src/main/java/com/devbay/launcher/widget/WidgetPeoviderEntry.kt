@@ -1,4 +1,4 @@
-package com.devbay.launcher
+package com.devbay.launcher.widget
 
 import android.appwidget.AppWidgetProviderInfo
 

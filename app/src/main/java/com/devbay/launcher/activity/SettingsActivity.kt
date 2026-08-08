@@ -10,6 +10,7 @@ import com.devbay.launcher.R
 import com.devbay.launcher.databinding.*
 import com.devbay.launcher.lock.*
 import com.devbay.launcher.theme.*
+import com.devbay.launcher.settings.*
 import com.devbay.launcher.databinding.ActivitySettingsBinding
 
 class SettingsActivity : AppCompatActivity() {

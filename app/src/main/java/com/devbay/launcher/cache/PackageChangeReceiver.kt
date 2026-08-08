@@ -1,4 +1,4 @@
-package com.devbay.launcher
+package com.devbay.launcher.cache
 
 import com.devbay.launcher.app.*
 import android.content.BroadcastReceiver

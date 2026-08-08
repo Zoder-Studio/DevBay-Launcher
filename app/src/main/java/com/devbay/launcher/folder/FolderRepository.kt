@@ -1,5 +1,6 @@
 package com.devbay.launcher.folder
 
+import com.devbay.launcher.app.*
 import android.content.Context
 import org.json.JSONArray
 import org.json.JSONObject
