@@ -36,7 +36,6 @@ import android.view.inputmethod.InputMethodManager
 import androidx.core.view.GestureDetectorCompat
 import kotlin.math.abs
 import com.devbay.launcher.databinding.ActivityMainBinding
-import com.devbay.launcher.settings.SettingsActivity
 import com.devbay.launcher.activity.*
 import com.devbay.launcher.app.*
 import com.devbay.launcher.clipboard.*
