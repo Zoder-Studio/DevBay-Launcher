@@ -103,7 +103,7 @@
             android:theme="@style/Theme.DevBayLauncher" />
 
         <activity
-            android:name=".activity.GithubMonitorActivity"
+            android:name=".activity.GitHubMonitorActivity"
             android:exported="false"
             android:theme="@style/Theme.DevBayLauncher" />
 
