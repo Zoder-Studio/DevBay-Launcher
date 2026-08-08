@@ -35,7 +35,7 @@ class SettingsShortcutRepository(private val context: Context) {
             SettingsShortcut(
                 context.getString(R.string.shortcut_battery),
                 R.drawable.ic_shortcut_battery,
-                Settings.ACTION_POWER_USAGE_SUMMARY
+                Intent.ACTION_POWER_USAGE_SUMMARY
             ),
             SettingsShortcut(
                 context.getString(R.string.shortcut_storage),
@@ -65,7 +65,7 @@ class SettingsShortcutRepository(private val context: Context) {
             SettingsShortcut(
                 context.getString(R.string.shortcut_notifications),
                 R.drawable.ic_shortcut_notifications,
-                Settings.ACTION_NOTIFICATION_SETTINGS
+                Settings.ACTION_APP_NOTIFICATION_SETTINGS
             ),
             SettingsShortcut(
                 context.getString(R.string.shortcut_security),
