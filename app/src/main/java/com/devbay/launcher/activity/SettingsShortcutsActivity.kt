@@ -1,4 +1,4 @@
-package com.devbay.launcher.settings
+package com.devbay.launcher.activity
 
 import android.content.ActivityNotFoundException
 import android.content.Intent
