@@ -16,4 +16,3 @@ dependencyResolutionManagement {
 
 rootProject.name = "devbay-launcher"
 include(":app")
-includeBuild("logfox")
