@@ -4,7 +4,7 @@ on:
   workflow_run:
     workflows: [ "Build APK" ]
     types: [ completed ]
-  workflows_dispatch:
+  workflow_dispatch:
 
 permissions:
   contents: write
