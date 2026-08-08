@@ -1,5 +1,6 @@
 package com.devbay.launcher.vault
 
+import com.devbay.launcher.R
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
 import androidx.core.content.ContextCompat

@@ -1,5 +1,7 @@
 package com.devbay.launcher.notification
 
+import com.devbay.launcher.R
+import com.devbay.launcher.github.*
 import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager

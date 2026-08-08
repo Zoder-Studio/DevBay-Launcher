@@ -1,5 +1,6 @@
 package com.devbay.launcher.quicktoggle
 
+import com.devbay.launcher.databinding.*
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView

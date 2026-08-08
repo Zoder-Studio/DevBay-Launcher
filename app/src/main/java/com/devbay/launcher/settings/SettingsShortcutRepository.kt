@@ -1,5 +1,7 @@
 package com.devbay.launcher.settings
 
+import com.devbay.launcher.R
+import android.provider.Settings
 import android.content.Context
 import android.content.Intent
 import android.provider.Settings

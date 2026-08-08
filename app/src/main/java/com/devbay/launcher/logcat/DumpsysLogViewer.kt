@@ -1,5 +1,7 @@
 package com.devbay.launcher.logcat
 
+import com.devbay.launcher.shizuku.*
+
 class DumpsysLogViewer {
 
     suspend fun fetchRecentCrashLog(packageName: String): String {

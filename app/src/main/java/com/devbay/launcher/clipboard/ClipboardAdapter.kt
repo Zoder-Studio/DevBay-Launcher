@@ -1,5 +1,6 @@
 package com.devbay.launcher.clipboard
 
+import com.devbay.launcher.databinding.*
 import android.text.format.DateUtils
 import android.view.LayoutInflater
 import android.view.ViewGroup

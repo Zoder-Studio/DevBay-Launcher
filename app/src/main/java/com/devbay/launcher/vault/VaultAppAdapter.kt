@@ -1,5 +1,9 @@
 package com.devbay.launcher.vault
 
+import com.devbay.launcher.R
+import com.devbay.launcher.databinding.*
+import com.devbay.launcher.app.*
+import com.devbay.launcher.notification.*
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup

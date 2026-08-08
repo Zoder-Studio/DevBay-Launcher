@@ -7,6 +7,10 @@ import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
+import com.devbay.launcher.R
+import com.devbay.launcher.databinding.*
+import com.devbay.launcher.app.*
+import com.devbay.launcher.settings.*
 import com.devbay.launcher.databinding.ActivitySettingsShortcutsBinding
 
 class SettingsShortcutsActivity : AppCompatActivity() {

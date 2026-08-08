@@ -7,6 +7,9 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.devbay.launcher.R
+import com.devbay.launcher.databinding.*
+import com.devbay.launcher.github.*
 import com.devbay.launcher.databinding.ActivityGithubMonitorBinding
 
 class GitHubMonitorActivity : AppCompatActivity() {

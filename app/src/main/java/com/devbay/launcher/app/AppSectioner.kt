@@ -1,5 +1,7 @@
 package com.devbay.launcher.app
 
+import com.devbay.launcher.folder.*
+
 data class AppSection(
     val category: AppCategory,
     val apps: List<AppInfo>,

@@ -1,5 +1,6 @@
 package com.devbay.launcher
 
+import com.devbay.launcher.app.*
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent

@@ -1,5 +1,6 @@
 package com.devbay.launcher
 
+import com.devbay.launcher.databinding.*
 import android.util.DisplayMetrics
 import android.view.LayoutInflater
 import android.view.ViewGroup

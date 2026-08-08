@@ -1,5 +1,7 @@
 package com.devbay.launcher.gesture
 
+import com.devbay.launcher.R
+import com.devbay.launcher.app.*
 import android.content.Context
 
 object GestureActionCodec {

@@ -1,5 +1,6 @@
 package com.devbay.launcher.icon
 
+import com.devbay.launcher.app.*
 import android.content.Context
 
 object IconApplier {

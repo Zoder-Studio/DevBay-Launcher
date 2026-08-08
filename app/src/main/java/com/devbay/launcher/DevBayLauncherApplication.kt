@@ -1,5 +1,9 @@
 package com.devbay.launcher
 
+import com.devbay.launcher.app.*
+import com.devbay.launcher.cache.*
+import com.devbay.launcher.lock.*
+import com.devbay.launcher.theme.*
 import android.app.Application
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.ContextCompat

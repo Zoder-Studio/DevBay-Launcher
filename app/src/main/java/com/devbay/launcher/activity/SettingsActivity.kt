@@ -6,6 +6,10 @@ import android.os.Build
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
+import com.devbay.launcher.R
+import com.devbay.launcher.databinding.*
+import com.devbay.launcher.lock.*
+import com.devbay.launcher.theme.*
 import com.devbay.launcher.databinding.ActivitySettingsBinding
 
 class SettingsActivity : AppCompatActivity() {

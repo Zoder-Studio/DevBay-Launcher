@@ -1,5 +1,7 @@
 package com.devbay.launcher.recent
 
+import com.devbay.launcher.databinding.*
+import com.devbay.launcher.app.*
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView

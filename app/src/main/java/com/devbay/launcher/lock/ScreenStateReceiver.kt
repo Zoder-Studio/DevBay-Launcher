@@ -1,5 +1,6 @@
 package com.devbay.launcher.lock
 
+import com.devbay.launcher.activity.*
 import android.app.KeyguardManager
 import android.content.BroadcastReceiver
 import android.content.Context

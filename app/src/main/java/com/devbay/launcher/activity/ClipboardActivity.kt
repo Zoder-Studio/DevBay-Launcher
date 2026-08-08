@@ -9,6 +9,9 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.devbay.launcher.R
+import com.devbay.launcher.databinding.*
+import com.devbay.launcher.clipboard.*
 import com.devbay.launcher.databinding.ActivityClipboardBinding
 
 class ClipboardActivity : AppCompatActivity() {

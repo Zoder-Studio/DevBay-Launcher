@@ -3,6 +3,9 @@ package com.devbay.launcher.activity
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import com.devbay.launcher.R
+import com.devbay.launcher.databinding.*
+import com.devbay.launcher.logcat.*
 import com.devbay.launcher.databinding.ActivityLogViewerBinding
 import kotlinx.coroutines.launch
 

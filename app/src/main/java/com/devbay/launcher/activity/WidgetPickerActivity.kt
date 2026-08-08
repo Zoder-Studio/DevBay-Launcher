@@ -6,6 +6,9 @@ import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.devbay.launcher.R
+import com.devbay.launcher.databinding.*
+import com.devbay.launcher.widget.*
 import com.devbay.launcher.databinding.ActivityWidgetPickerBinding
 
 class WidgetPickerActivity : AppCompatActivity() {

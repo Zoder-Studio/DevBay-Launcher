@@ -13,7 +13,10 @@ import android.os.Looper
 import android.text.format.DateFormat
 import android.view.MotionEvent
 import android.view.WindowManager
+import androidx.activity.addCallback
 import androidx.appcompat.app.AppCompatActivity
+import com.devbay.launcher.R
+import com.devbay.launcher.databinding.*
 import com.devbay.launcher.databinding.ActivityLockScreenBinding
 import java.util.Date
 import kotlin.math.abs

@@ -5,6 +5,9 @@ import android.os.Bundle
 import android.provider.Settings
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.devbay.launcher.R
+import com.devbay.launcher.databinding.*
+import com.devbay.launcher.shizuku.*
 import com.devbay.launcher.databinding.ActivityShizukuPairingBinding
 
 class ShizukuPairingActivity : AppCompatActivity() {

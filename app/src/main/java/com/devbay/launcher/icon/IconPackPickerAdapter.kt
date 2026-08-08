@@ -1,5 +1,6 @@
 package com.devbay.launcher.icon
 
+import com.devbay.launcher.databinding.*
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup

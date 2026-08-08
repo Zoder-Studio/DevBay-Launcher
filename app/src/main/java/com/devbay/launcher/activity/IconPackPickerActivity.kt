@@ -4,6 +4,10 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.devbay.launcher.R
+import com.devbay.launcher.databinding.*
+import com.devbay.launcher.app.*
+import com.devbay.launcher.icon.*
 import com.devbay.launcher.databinding.ActivityIconPackPickerBinding
 import kotlinx.coroutines.launch
 
