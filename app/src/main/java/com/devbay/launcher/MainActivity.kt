@@ -40,7 +40,6 @@ import android.content.ContentValues
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.drawable.Drawable
-import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
 import androidx.core.view.GestureDetectorCompat
