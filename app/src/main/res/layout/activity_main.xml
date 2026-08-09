@@ -16,28 +16,10 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-        <TextView
-            android:id="@+id/launcherSwitchButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="start|center_vertical"
-            android:layout_marginTop="16dp"
-            android:layout_marginStart="16dp"
-            android:background="@drawable/bg_launcher_pill"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp"
-            android:paddingTop="8dp"
-            android:paddingBottom="8dp"
-            android:text="@string/launcher_button_label"
-            android:textColor="@color/accent_primary"
-            android:textSize="12sp"
-            android:textStyle="bold"
-            android:letterSpacing="0.05" />
-
         <ImageView
             android:id="@+id/headerLogo"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
             android:layout_gravity="center"
             android:layout_marginTop="16dp"
             android:src="@drawable/ic_launcher_foreground"
@@ -82,20 +64,59 @@
 
         </LinearLayout>
 
+        <TextView
+            android:id="@+id/launcherSwitchButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="start|center_vertical"
+            android:layout_marginTop="16dp"
+            android:layout_marginStart="16dp"
+            android:background="@drawable/bg_launcher_pill"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
+            android:text="@string/launcher_button_label"
+            android:textColor="@color/accent_primary"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.05"
+            android:clickable="true"
+            android:focusable="true"
+            android:elevation="4dp" />
+
     </FrameLayout>
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/quickToggleRow"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
         android:layout_marginTop="8dp"
-        android:paddingStart="12dp"
-        android:paddingEnd="12dp"
-        android:clipToPadding="false"
-        tools:listitem="@layout/item_quick_toggle"
         app:layout_constraintTop_toBottomOf="@id/gestureZone"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/quickToggleRow"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:paddingStart="12dp"
+            android:clipToPadding="false"
+            tools:listitem="@layout/item_quick_toggle" />
+
+        <ImageButton
+            android:id="@+id/quickToggleExpandButton"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_marginEnd="12dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_chevron_up"
+            app:tint="@color/launcher_text_secondary"
+            android:contentDescription="@null" />
+
+    </LinearLayout>
 
     <EditText
         android:id="@+id/searchInput"

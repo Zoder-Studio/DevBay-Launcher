@@ -17,6 +17,7 @@ import android.view.View
 import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.FrameLayout
+import android.app.KeyguardManager
 import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.activity.addCallback
@@ -35,6 +36,13 @@ import android.view.MotionEvent
 import android.app.role.RoleManager
 import android.os.Build
 import android.view.inputmethod.InputMethodManager
+import android.content.ContentValues
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.drawable.Drawable
+import android.os.Build
+import android.os.Environment
+import android.provider.MediaStore
 import androidx.core.view.GestureDetectorCompat
 import kotlin.math.abs
 import com.devbay.launcher.databinding.ActivityMainBinding
@@ -95,6 +103,8 @@ class MainActivity : AppCompatActivity() {
     private var pendingChipAction: QuickToggleChip? = null
     private var allApps: List<AppInfo> = emptyList()
     private var currentQuery: String = ""
+
+    private var isQuickToggleExpanded = true
 
     private var pendingWidgetId: Int = -1
     private var pendingProviderInfo: AppWidgetProviderInfo? = null
@@ -364,9 +374,58 @@ class MainActivity : AppCompatActivity() {
         actions.add(getString(R.string.action_hide_app) to { handleHideApp(app) })
         actions.add(getString(R.string.action_view_logcat) to { openLogAccessPicker(app, isCrashMode = false) })
         actions.add(getString(R.string.action_view_crash) to { openLogAccessPicker(app, isCrashMode = true) })
+        actions.add(getString(R.string.action_export_icon) to { exportAppIcon(app) })
         actions.add(getString(R.string.action_app_info) to { openSystemAppInfo(app) })
 
         ActionSheetHelper.show(this, app.label, actions)
+    }
+
+    private fun exportAppIcon(app: AppInfo) {
+        lifecycleScope.launch {
+            val success = withContext(Dispatchers.IO) { saveIconToGallery(app) }
+            val message = if (success) {
+                getString(R.string.icon_exported, app.label)
+            } else {
+                getString(R.string.icon_export_failed)
+            }
+            Toast.makeText(this@MainActivity, message, Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun saveIconToGallery(app: AppInfo): Boolean {
+        return try {
+            val bitmap = drawableToBitmap(app.icon)
+            val fileName = "${app.packageName}.png"
+
+            val contentValues = ContentValues().apply {
+                put(MediaStore.Images.Media.DISPLAY_NAME, fileName)
+                put(MediaStore.Images.Media.MIME_TYPE, "image/png")
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    put(MediaStore.Images.Media.RELATIVE_PATH, "${Environment.DIRECTORY_PICTURES}/DevBayIcons")
+                }
+            }
+
+            val resolver = contentResolver
+            val uri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues) ?: return false
+
+            resolver.openOutputStream(uri)?.use { outputStream ->
+                bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
+            } ?: return false
+
+            true
+        } catch (throwable: Throwable) {
+            false
+        }
+    }
+
+    private fun drawableToBitmap(drawable: Drawable): Bitmap {
+        val width = if (drawable.intrinsicWidth > 0) drawable.intrinsicWidth else ICON_EXPORT_SIZE
+        val height = if (drawable.intrinsicHeight > 0) drawable.intrinsicHeight else ICON_EXPORT_SIZE
+        val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+        drawable.setBounds(0, 0, canvas.width, canvas.height)
+        drawable.draw(canvas)
+        return bitmap
     }
 
     private fun showFolderPicker(app: AppInfo) {
@@ -670,11 +729,26 @@ class MainActivity : AppCompatActivity() {
         quickToggleAdapter = QuickToggleAdapter(emptyList()) { chip -> onChipClicked(chip) }
         binding.quickToggleRow.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
         binding.quickToggleRow.adapter = quickToggleAdapter
+
+        binding.quickToggleExpandButton.setOnClickListener {
+            isQuickToggleExpanded = !isQuickToggleExpanded
+            binding.quickToggleExpandButton.setImageResource(
+                if (isQuickToggleExpanded) R.drawable.ic_chevron_up else R.drawable.ic_chevron_down
+            )
+            refreshQuickToggleChips()
+        }
+
         refreshQuickToggleChips()
     }
 
     private fun refreshQuickToggleChips() {
-        quickToggleAdapter.updateChips(buildQuickToggleChips())
+        val allChips = buildQuickToggleChips()
+        val visibleChips = if (isQuickToggleExpanded) {
+            allChips
+        } else {
+            allChips.filter { it.type == QuickToggleType.DEVELOPER_SETTINGS }
+        }
+        quickToggleAdapter.updateChips(visibleChips)
     }
 
     private fun buildQuickToggleChips(): List<QuickToggleChip> {
@@ -743,6 +817,15 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun executeChipCommand(chip: QuickToggleChip) {
+        val requiresUnlock = chip.type == QuickToggleType.KILL_ACTIVITIES ||
+            chip.type == QuickToggleType.SLOW_ANIMATIONS ||
+            chip.type == QuickToggleType.BIG_FONTS
+
+        if (requiresUnlock && !isDeviceUnlocked()) {
+            Toast.makeText(this, R.string.chip_requires_unlock, Toast.LENGTH_SHORT).show()
+            return
+        }
+
         val command = when (chip.type) {
             QuickToggleType.KILL_ACTIVITIES -> systemToggleRepository.killAllBackgroundAppsCommand()
             QuickToggleType.SLOW_ANIMATIONS ->
@@ -767,6 +850,11 @@ class MainActivity : AppCompatActivity() {
             }
             refreshQuickToggleChips()
         }
+    }
+
+    private fun isDeviceUnlocked(): Boolean {
+        val keyguardManager = getSystemService(KeyguardManager::class.java)
+        return keyguardManager?.isDeviceLocked != true
     }
 
     private fun isNotificationAccessGranted(): Boolean {
@@ -968,5 +1056,6 @@ class MainActivity : AppCompatActivity() {
         private const val SWIPE_VELOCITY_THRESHOLD = 150
         private const val METHOD_EXPAND_NOTIFICATIONS = "expandNotificationsPanel"
         private const val METHOD_EXPAND_QUICK_SETTINGS = "expandSettingsPanel"
+        private const val ICON_EXPORT_SIZE = 192
     }
 }

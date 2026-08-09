@@ -16,6 +16,7 @@ import com.devbay.launcher.R
 import com.devbay.launcher.databinding.*
 import com.devbay.launcher.app.*
 import com.devbay.launcher.vault.*
+import com.devbay.launcher.app.ActionSheetHelper
 import com.devbay.launcher.databinding.ActivityVaultBinding
 
 class VaultActivity : AppCompatActivity() {
@@ -66,23 +67,14 @@ class VaultActivity : AppCompatActivity() {
     }
 
     private fun openVaultAppOptions(app: AppInfo) {
-        val options = arrayOf(
-            getString(R.string.action_unhide),
-            getString(R.string.action_app_info)
+        val actions = listOf(
+            getString(R.string.action_unhide) to {
+                vaultRepository.unhideApp(app.key)
+                loadHiddenApps()
+            },
+            getString(R.string.action_app_info) to { openSystemAppInfo(app) }
         )
-        AlertDialog.Builder(this)
-            .setTitle(app.label)
-            .setItems(options) { dialog, which ->
-                when (which) {
-                    0 -> {
-                        vaultRepository.unhideApp(app.key)
-                        loadHiddenApps()
-                    }
-                    1 -> openSystemAppInfo(app)
-                }
-                dialog.dismiss()
-            }
-            .show()
+        ActionSheetHelper.show(this, app.label, actions)
     }
 
     private fun openSystemAppInfo(app: AppInfo) {

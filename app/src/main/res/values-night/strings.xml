@@ -185,4 +185,9 @@
     <string name="github_notification_body">%1$d new issue(s)/PR(s)</string>
 
     <string name="apps_refreshed">App list refreshed</string>
+    <string name="chip_requires_unlock">Unlock your device first to use this</string>
+
+    <string name="action_export_icon">Export icon</string>
+    <string name="icon_exported">Icon for %1$s saved to Pictures/DevBayIcons</string>
+    <string name="icon_export_failed">Failed to export icon</string>
 </resources>
