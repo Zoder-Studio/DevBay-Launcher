@@ -33,7 +33,7 @@ jobs:
             echo "tag=$TAG" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Download unsigned APK from CI
+      - name: Download unsigned APK from Build APK
         if: steps.get_tag.outputs.tag != ''
         uses: dawidd6/action-download-artifact@v6
         with:

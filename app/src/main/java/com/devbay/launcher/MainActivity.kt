@@ -32,6 +32,8 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.view.GestureDetector
 import android.view.MotionEvent
+import android.app.role.RoleManager
+import android.os.Build
 import android.view.inputmethod.InputMethodManager
 import androidx.core.view.GestureDetectorCompat
 import kotlin.math.abs
@@ -196,6 +198,7 @@ class MainActivity : AppCompatActivity() {
         refreshQuickToggleChips()
         maybePromptNotificationAccess()
         refreshGitHubSection()
+        refreshLauncherButtonState()
     }
 
     override fun onStart() {
@@ -330,52 +333,36 @@ class MainActivity : AppCompatActivity() {
         val isTools = categoryPreferences.isTools(app.key)
         val currentFolder = folderRepository.findFolderContaining(app.key)
 
-        val pinLabel = getString(if (isPinned) R.string.action_unpin else R.string.action_pin)
-        val toolsLabel = getString(if (isTools) R.string.action_remove_tools else R.string.action_add_tools)
-        val folderLabel = if (currentFolder != null) {
-            getString(R.string.action_remove_from_folder)
-        } else {
-            getString(R.string.action_add_to_folder)
-        }
+        val actions = mutableListOf<Pair<String, () -> Unit>>()
 
-        val options = arrayOf(
-            pinLabel,
-            toolsLabel,
-            folderLabel,
-            getString(R.string.action_hide_app),
-            getString(R.string.action_view_logcat),
-            getString(R.string.action_view_crash),
-            getString(R.string.action_app_info)
-        )
-
-        AlertDialog.Builder(this)
-            .setTitle(app.label)
-            .setItems(options) { dialog, which ->
-                when (which) {
-                    0 -> {
-                        if (isPinned) categoryPreferences.unpinApp(app.key) else categoryPreferences.pinApp(app.key)
-                        refreshFilteredApps()
-                    }
-                    1 -> {
-                        if (isTools) categoryPreferences.removeFromTools(app.key) else categoryPreferences.addToTools(app.key)
-                        refreshFilteredApps()
-                    }
-                    2 -> {
-                        if (currentFolder != null) {
-                            folderRepository.removeAppFromFolder(currentFolder.id, app.key)
-                            refreshFilteredApps()
-                        } else {
-                            showFolderPicker(app)
-                        }
-                    }
-                    3 -> handleHideApp(app)
-                    4 -> openLogAccessPicker(app, isCrashMode = false)
-                    5 -> openLogAccessPicker(app, isCrashMode = true)
-                    6 -> openSystemAppInfo(app)
-                }
-                dialog.dismiss()
+        actions.add(
+            getString(if (isPinned) R.string.action_unpin else R.string.action_pin) to {
+                if (isPinned) categoryPreferences.unpinApp(app.key) else categoryPreferences.pinApp(app.key)
+                refreshFilteredApps()
             }
-            .show()
+        )
+        actions.add(
+            getString(if (isTools) R.string.action_remove_tools else R.string.action_add_tools) to {
+                if (isTools) categoryPreferences.removeFromTools(app.key) else categoryPreferences.addToTools(app.key)
+                refreshFilteredApps()
+            }
+        )
+        actions.add(
+            getString(if (currentFolder != null) R.string.action_remove_from_folder else R.string.action_add_to_folder) to {
+                if (currentFolder != null) {
+                    folderRepository.removeAppFromFolder(currentFolder.id, app.key)
+                    refreshFilteredApps()
+                } else {
+                    showFolderPicker(app)
+                }
+            }
+        )
+        actions.add(getString(R.string.action_hide_app) to { handleHideApp(app) })
+        actions.add(getString(R.string.action_view_logcat) to { openLogAccessPicker(app, isCrashMode = false) })
+        actions.add(getString(R.string.action_view_crash) to { openLogAccessPicker(app, isCrashMode = true) })
+        actions.add(getString(R.string.action_app_info) to { openSystemAppInfo(app) })
+
+        ActionSheetHelper.show(this, app.label, actions)
     }
 
     private fun showFolderPicker(app: AppInfo) {
@@ -825,6 +812,21 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun switchDefaultLauncher() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            val roleManager = getSystemService(RoleManager::class.java)
+            if (roleManager != null && roleManager.isRoleAvailable(RoleManager.ROLE_HOME)) {
+                if (roleManager.isRoleHeld(RoleManager.ROLE_HOME)) {
+                    openLegacyHomeChooser()
+                } else {
+                    startActivity(roleManager.createRequestRoleIntent(RoleManager.ROLE_HOME))
+                }
+                return
+            }
+        }
+        openLegacyHomeChooser()
+    }
+
+    private fun openLegacyHomeChooser() {
         try {
             packageManager.clearPackagePreferredActivities(packageName)
             val homeIntent = Intent(Intent.ACTION_MAIN).apply {
@@ -838,6 +840,22 @@ class MainActivity : AppCompatActivity() {
             } catch (fallbackException: ActivityNotFoundException) {
                 Toast.makeText(this, R.string.switch_launcher_unavailable, Toast.LENGTH_SHORT).show()
             }
+        }
+    }
+
+    private fun isCurrentDefaultLauncher(): Boolean {
+        val homeIntent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME)
+        val resolvedInfo = packageManager.resolveActivity(homeIntent, PackageManager.MATCH_DEFAULT_ONLY)
+        return resolvedInfo?.activityInfo?.packageName == packageName
+    }
+
+    private fun refreshLauncherButtonState() {
+        if (isCurrentDefaultLauncher()) {
+            binding.launcherSwitchButton.setBackgroundResource(R.drawable.bg_launcher_pill_filled)
+            binding.launcherSwitchButton.setTextColor(getColor(android.R.color.white))
+        } else {
+            binding.launcherSwitchButton.setBackgroundResource(R.drawable.bg_launcher_pill)
+            binding.launcherSwitchButton.setTextColor(getColor(R.color.accent_primary))
         }
     }
 
