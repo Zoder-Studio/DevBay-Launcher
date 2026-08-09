@@ -43,10 +43,13 @@ jobs:
           run-id: ${{ github.event.workflow_run.id }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Install SDK
+        if:steps.resolve_tag.outputs.should_release == 'true'
+        use: ./.github/actions/setup-sdk
+
       - name: Install Android SDK build-tools
         if: steps.resolve_tag.outputs.should_release == 'true'
         run: |
-          yes | sdkmanager --licenses > /dev/null || true
           sdkmanager "build-tools;35.0.0"
 
       - name: Decode signing keystore
