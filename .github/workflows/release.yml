@@ -45,7 +45,7 @@ jobs:
 
       - name: Install SDK
         if: steps.resolve_tag.outputs.should_release == 'true'
-        use: ./.github/actions/setup-sdk
+        uses: ./.github/actions/setup-sdk
 
       - name: Install Android SDK build-tools
         if: steps.resolve_tag.outputs.should_release == 'true'
