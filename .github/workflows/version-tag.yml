@@ -1,68 +1,100 @@
-name: Version Tag
+name: Veraion-tag
 
 on:
+  workflow_run:
+    workflows: ["Build APK"]
+    types:
+      - completed
   workflow_dispatch:
     inputs:
       bump_type:
-        description: "Version part to bump"
+        description: 'Which part of the version to bump'
         required: true
-        default: "patch"
+        default: 'patch'
         type: choice
         options:
           - patch
           - minor
           - major
 
-permissions:
-  contents: write
-
 jobs:
-  create-tag:
+  auto-tag:
+    name: Create Next Version Tag
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.head_branch == 'main')
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          token: ${{ secrets.RELEASE_PAT }}
+          token: ${{ secrets.AUTO_TAG_PAT }}
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
-      - name: Configure git identity
+      - name: Check if commit already tagged
+        id: check_existing
+        run: |
+          git fetch --tags
+          EXISTING_TAG=$(git tag --points-at HEAD | grep '^v' | head -n 1)
+          if [ -n "$EXISTING_TAG" ]; then
+            echo "Commit already has tag $EXISTING_TAG. Skipping."
+            echo "should_skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "should_skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Determine next version tag
+        id: next_version
+        if: steps.check_existing.outputs.should_skip == 'false'
+        run: |
+          LATEST_TAG=$(git tag --list 'v*.*.*' --sort=-v:refname | head -n 1)
+
+          if [ -z "$LATEST_TAG" ]; then
+            LATEST_TAG="v0.0.0"
+          fi
+
+          echo "Latest tag found: $LATEST_TAG"
+
+          VERSION="${LATEST_TAG#v}"
+          MAJOR=$(echo "$VERSION" | cut -d. -f1)
+          MINOR=$(echo "$VERSION" | cut -d. -f2)
+          PATCH=$(echo "$VERSION" | cut -d. -f3)
+
+          BUMP_TYPE="${{ github.event.inputs.bump_type }}"
+          if [ -z "$BUMP_TYPE" ]; then
+            BUMP_TYPE="patch"
+          fi
+
+          if [ "$BUMP_TYPE" = "major" ]; then
+            MAJOR=$((MAJOR + 1))
+            MINOR=0
+            PATCH=0
+          elif [ "$BUMP_TYPE" = "minor" ]; then
+            MINOR=$((MINOR + 1))
+            PATCH=0
+          else
+            PATCH=$((PATCH + 1))
+          fi
+
+          NEW_TAG="v${MAJOR}.${MINOR}.${PATCH}"
+          echo "New tag will be: $NEW_TAG"
+          echo "new_tag=$NEW_TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Create and push new tag
+        if: steps.check_existing.outputs.should_skip == 'false'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-
-      - name: Compute next version tag
-        id: next
-        run: |
-          set -e
-          LATEST_TAG=$(git tag --list "v*.*.*" | sort -V | tail -n 1)
-
-          if [ -z "$LATEST_TAG" ]; then
-            MAJOR=0; MINOR=0; PATCH=0
-          else
-            VERSION="${LATEST_TAG#v}"
-            IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
-          fi
-
-          case "${{ inputs.bump_type }}" in
-            major) MAJOR=$((MAJOR+1)); MINOR=0; PATCH=0 ;;
-            minor) MINOR=$((MINOR+1)); PATCH=0 ;;
-            patch) PATCH=$((PATCH+1)) ;;
-          esac
-
-          NEW_TAG="v$MAJOR.$MINOR.$PATCH"
-
-          if git rev-parse "$NEW_TAG" >/dev/null 2>&1; then
-            echo "::error::Tag $NEW_TAG already exists"
-            exit 1
-          fi
-
-          echo "new_tag=$NEW_TAG" >> "$GITHUB_OUTPUT"
-
-      - name: Create and push tag
-        run: |
-          git tag "${{ steps.next.outputs.new_tag }}"
-          git push origin "${{ steps.next.outputs.new_tag }}"
+          git tag "${{ steps.next_version.outputs.new_tag }}"
+          git remote set-url origin https://x-access-token:${{ secrets.AUTO_TAG_PAT }}@github.com/${{ github.repository }}.git
+          git push origin "${{ steps.next_version.outputs.new_tag }}"
 
       - name: Summary
-        run: echo "Created and pushed tag ${{ steps.next.outputs.new_tag }}"
+        if: steps.check_existing.outputs.should_skip == 'false'
+        run: |
+          echo "### New version tag created: ${{ steps.next_version.outputs.new_tag }}" >> "$GITHUB_STEP_SUMMARY"
