@@ -44,7 +44,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install SDK
-        if:steps.resolve_tag.outputs.should_release == 'true'
+        if: steps.resolve_tag.outputs.should_release == 'true'
         use: ./.github/actions/setup-sdk
 
       - name: Install Android SDK build-tools
