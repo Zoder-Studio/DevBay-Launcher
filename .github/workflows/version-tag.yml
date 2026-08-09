@@ -1,4 +1,4 @@
-name: Veraion-tag
+name: Version-tag
 
 on:
   workflow_run:
@@ -33,7 +33,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          token: ${{ secrets.AUTO_TAG_PAT }}
+          token: ${{ secrets.RELEASE_PAT }}
           ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
       - name: Check if commit already tagged
