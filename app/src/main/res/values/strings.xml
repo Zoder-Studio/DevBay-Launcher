@@ -183,4 +183,6 @@
     <string name="github_section_label">GITHUB</string>
     <string name="github_notification_channel_name">GitHub Repo Updates</string>
     <string name="github_notification_body">%1$d new issue(s)/PR(s)</string>
+
+    <string name="apps_refreshed">App list refreshed</string>
 </resources>

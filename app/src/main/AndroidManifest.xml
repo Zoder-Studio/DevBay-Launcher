@@ -53,7 +53,8 @@
         <activity
             android:name="leakcanary.internal.activity.LeakLauncherActivity"
             android:enabled="false"
-            tools:node="merge" />
+            tools:node="merge"
+            tools:ignore="MissingClass" />
 
         <activity
             android:name=".activity.VaultActivity"

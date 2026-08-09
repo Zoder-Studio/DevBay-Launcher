@@ -182,6 +182,10 @@ class MainActivity : AppCompatActivity() {
         binding.settingsButton.setOnClickListener {
             startActivity(Intent(this, SettingsActivity::class.java))
         }
+        binding.resetButton.setOnClickListener {
+            lifecycleScope.launch { AppCacheRefresher.refresh(applicationContext) }
+            Toast.makeText(this, R.string.apps_refreshed, Toast.LENGTH_SHORT).show()
+        }
         binding.launcherSwitchButton.setOnClickListener { switchDefaultLauncher() }
         gesturePreferences = GesturePreferences(applicationContext)
         setupGestureZone()
