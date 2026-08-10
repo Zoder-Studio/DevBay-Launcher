@@ -34,9 +34,9 @@ class AppSectioner(
 
         val sections = mutableListOf<AppSection>()
         if (debugApps.isNotEmpty()) sections.add(AppSection(AppCategory.DEBUG, debugApps))
-        if (pinnedApps.isNotEmpty()) sections.add(AppSection(AppCategory.PINNED, pinnedApps))
-        if (toolsApps.isNotEmpty()) sections.add(AppSection(AppCategory.TOOLS, toolsApps))
-        sections.add(AppSection(AppCategory.OTHER, otherApps, otherFolders))
+        sections.add(AppSection(AppCategory.PINNED, pinnedApps))
+        sections.add(AppSection(AppCategory.TOOLS, toolsApps))
+        sections.add(AppSection(AppCategory.OTHER, otherApps))
 
         return sections
     }

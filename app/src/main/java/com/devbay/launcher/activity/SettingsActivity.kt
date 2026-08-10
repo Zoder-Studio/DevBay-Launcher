@@ -18,6 +18,7 @@ class SettingsActivity : AppCompatActivity() {
     private lateinit var binding: ActivitySettingsBinding
     private lateinit var lockScreenPreferences: LockScreenPreferences
     private lateinit var themePreferences: ThemePreferences
+    private lateinit var homeLayoutPreferences: HomeLayoutPreferences
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,6 +38,15 @@ class SettingsActivity : AppCompatActivity() {
         bindDeviceInfo()
         bindThemeOptions()
         bindGithubLink()
+        homeLayoutPreferences = HomeLayoutPreferences(applicationContext)
+        when (homeLayoutPreferences.getMode()) {
+            HomeLayoutMode.FULL -> binding.homeLayoutRadioGroup.check(R.id.homeLayoutFullOption)
+            HomeLayoutMode.MINIMAL -> binding.homeLayoutRadioGroup.check(R.id.homeLayoutMinimalOption)
+        }
+        binding.homeLayoutRadioGroup.setOnCheckedChangeListener { _, checkedId ->
+            val mode = if (checkedId == R.id.homeLayoutMinimalOption) HomeLayoutMode.MINIMAL else HomeLayoutMode.FULL
+            homeLayoutPreferences.setMode(mode)
+        }
         binding.shortcutsRow.setOnClickListener {
             startActivity(Intent(this, SettingsShortcutsActivity::class.java))
         }

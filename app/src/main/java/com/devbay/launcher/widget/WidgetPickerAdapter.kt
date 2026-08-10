@@ -24,6 +24,15 @@ class WidgetPickerAdapter(
         val icon = entry.providerInfo.loadIcon(context, DisplayMetrics.DENSITY_DEFAULT)
         holder.binding.providerIcon.setImageDrawable(icon)
         holder.binding.providerLabel.text = entry.label
+
+        val preview = entry.providerInfo.loadPreviewImage(context, DisplayMetrics.DENSITY_DEFAULT)
+        if (preview != null) {
+            holder.binding.providerPreview.setImageDrawable(preview)
+            holder.binding.providerPreview.visibility = android.view.View.VISIBLE
+        } else {
+            holder.binding.providerPreview.visibility = android.view.View.GONE
+        }
+
         holder.binding.root.setOnClickListener { onProviderClick(entry) }
     }
 

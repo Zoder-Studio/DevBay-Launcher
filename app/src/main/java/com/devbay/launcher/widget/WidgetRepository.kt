@@ -26,6 +26,14 @@ class WidgetRepository(context: Context) {
         }
     }
 
+    fun setWidgetSizeMultiplier(widgetId: Int, multiplier: Float) {
+        preferences.edit().putFloat("${KEY_SIZE_PREFIX}$widgetId", multiplier).apply()
+    }
+
+    fun getWidgetSizeMultiplier(widgetId: Int): Float {
+        return preferences.getFloat("${KEY_SIZE_PREFIX}$widgetId", 1.0f)
+    }
+
     private fun saveWidgetIds(ids: List<Int>) {
         preferences.edit().putString(KEY_WIDGET_IDS, ids.joinToString(DELIMITER)).apply()
     }
@@ -34,5 +42,6 @@ class WidgetRepository(context: Context) {
         private const val PREFS_NAME = "devbay_widgets"
         private const val KEY_WIDGET_IDS = "widget_ids"
         private const val DELIMITER = ","
+        private const val KEY_SIZE_PREFIX = "widget_size_"
     }
 }

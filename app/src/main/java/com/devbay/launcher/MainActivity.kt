@@ -42,6 +42,11 @@ import android.graphics.Canvas
 import android.graphics.drawable.Drawable
 import android.os.Environment
 import android.provider.MediaStore
+import android.app.WallpaperManager
+import android.text.format.DateFormat
+import android.os.Handler
+import android.os.Looper
+import java.util.Date
 import androidx.core.view.GestureDetectorCompat
 import kotlin.math.abs
 import com.devbay.launcher.databinding.ActivityMainBinding
@@ -94,6 +99,16 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var gitHubPreferences: GitHubPreferences
     private lateinit var gitHubHomeAdapter: GitHubHomeAdapter
+
+    private lateinit var homeLayoutPreferences: HomeLayoutPreferences
+    private lateinit var minimalDockAdapter: LauncherAdapter
+    private val minimalClockHandler = Handler(Looper.getMainLooper())
+    private val minimalClockUpdater = object : Runnable {
+        override fun run() {
+            updateMinimalClock()
+            minimalClockHandler.postDelayed(this, 1000L)
+        }
+    }
 
     private val clipboardChangeListener = ClipboardManager.OnPrimaryClipChangedListener {
         captureCurrentClipboardEntry()
@@ -195,6 +210,9 @@ class MainActivity : AppCompatActivity() {
             lifecycleScope.launch { AppCacheRefresher.refresh(applicationContext) }
             Toast.makeText(this, R.string.apps_refreshed, Toast.LENGTH_SHORT).show()
         }
+        homeLayoutPreferences = HomeLayoutPreferences(applicationContext)
+        setupMinimalDock()
+        applyHomeLayoutMode()
         binding.launcherSwitchButton.setOnClickListener { switchDefaultLauncher() }
         gesturePreferences = GesturePreferences(applicationContext)
         setupGestureZone()
@@ -289,6 +307,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun refreshFilteredApps() {
         applyCachedApps(AppCacheStore.getApps())
+        applyHomeLayoutMode()
     }
 
     private fun renderList() {
@@ -301,9 +320,10 @@ class MainActivity : AppCompatActivity() {
         val sections = appSectioner.buildSections(allApps)
         val items = mutableListOf<LauncherListItem>()
         for (section in sections) {
-            val totalCount = section.apps.size + section.folders.size
-            items.add(LauncherListItem.Header(section.category, totalCount))
+            val shouldAlwaysShow = section.category == AppCategory.PINNED || section.category == AppCategory.TOOLS
+            if (section.apps.isEmpty() && section.folders.isEmpty() && !shouldAlwaysShow) continue
 
+            items.add(LauncherListItem.Header(section.category, section.apps.size))
             section.folders.forEach { folder ->
                 val appsByKey = allApps.associateBy { it.key }
                 val previewApps = folder.appKeys.take(4).mapNotNull { appsByKey[it] }
@@ -651,19 +671,39 @@ class MainActivity : AppCompatActivity() {
         }
         pendingProviderInfo = providerInfo
 
-        if (providerInfo.configure != null) {
-            val configureIntent = Intent(AppWidgetManager.ACTION_APPWIDGET_CONFIGURE).apply {
-                component = providerInfo.configure
-                putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId)
-            }
-            try {
-                configureWidgetLauncher.launch(configureIntent)
-            } catch (exception: ActivityNotFoundException) {
+        showWidgetSizePicker {
+            if (providerInfo.configure != null) {
+                val configureIntent = Intent(AppWidgetManager.ACTION_APPWIDGET_CONFIGURE).apply {
+                    component = providerInfo.configure
+                    putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId)
+                }
+                try {
+                    configureWidgetLauncher.launch(configureIntent)
+                } catch (exception: ActivityNotFoundException) {
+                    finalizeWidgetAddition()
+                }
+            } else {
                 finalizeWidgetAddition()
             }
-        } else {
-            finalizeWidgetAddition()
         }
+    }
+
+    private fun showWidgetSizePicker(onSizeChosen: () -> Unit) {
+        val actions = listOf(
+            getString(R.string.widget_size_small) to {
+                widgetRepository.setWidgetSizeMultiplier(pendingWidgetId, 1.0f)
+                onSizeChosen()
+            },
+            getString(R.string.widget_size_medium) to {
+                widgetRepository.setWidgetSizeMultiplier(pendingWidgetId, 1.4f)
+                onSizeChosen()
+            },
+            getString(R.string.widget_size_large) to {
+                widgetRepository.setWidgetSizeMultiplier(pendingWidgetId, 1.8f)
+                onSizeChosen()
+            }
+        )
+        ActionSheetHelper.show(this, getString(R.string.widget_size_picker_title), actions)
     }
 
     private fun finalizeWidgetAddition() {
@@ -690,8 +730,9 @@ class MainActivity : AppCompatActivity() {
         hostView.setAppWidget(widgetId, providerInfo)
 
         val density = resources.displayMetrics.density
-        val cardWidthPx = (WIDGET_CARD_WIDTH_DP * density).toInt()
-        val cardHeightPx = (WIDGET_CARD_HEIGHT_DP * density).toInt()
+        val multiplier = widgetRepository.getWidgetSizeMultiplier(widgetId)
+        val cardWidthPx = (WIDGET_CARD_WIDTH_DP * multiplier * density).toInt()
+        val cardHeightPx = (WIDGET_CARD_HEIGHT_DP * multiplier * density).toInt()
 
         val wrapper = FrameLayout(this).apply {
             layoutParams = LinearLayout.LayoutParams(cardWidthPx, cardHeightPx).apply {
@@ -909,7 +950,11 @@ class MainActivity : AppCompatActivity() {
                 if (roleManager.isRoleHeld(RoleManager.ROLE_HOME)) {
                     openLegacyHomeChooser()
                 } else {
-                    startActivity(roleManager.createRequestRoleIntent(RoleManager.ROLE_HOME))
+                    try {
+                        startActivity(roleManager.createRequestRoleIntent(RoleManager.ROLE_HOME))
+                    } catch (exception: ActivityNotFoundException) {
+                        openLegacyHomeChooser()
+                    }
                 }
                 return
             }
@@ -1044,6 +1089,56 @@ class MainActivity : AppCompatActivity() {
         val repos = gitHubPreferences.getWatchedRepos()
         gitHubHomeAdapter.updateRepos(repos)
         binding.githubSection.visibility = if (repos.isEmpty()) View.GONE else View.VISIBLE
+    }
+
+    private fun setupMinimalDock() {
+        minimalDockAdapter = LauncherAdapter(
+            items = emptyList(),
+            onAppClick = { app -> launchApp(app) },
+            onAppLongClick = { app -> openAppOptions(app) },
+            onFolderClick = { folder -> openFolder(folder) },
+            onFolderLongClick = { folder -> openFolder(folder) },
+            onEditPinnedClick = {}
+        )
+        binding.minimalDockRow.layoutManager = GridLayoutManager(this, 6)
+        binding.minimalDockRow.adapter = minimalDockAdapter
+    }
+
+    private fun applyHomeLayoutMode() {
+        val isMinimal = homeLayoutPreferences.getMode() == HomeLayoutMode.MINIMAL
+
+        window.setBackgroundDrawable(null)
+        if (isMinimal) {
+            window.addFlags(android.view.WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER)
+        } else {
+            window.clearFlags(android.view.WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER)
+        }
+
+        val minimalVisibility = if (isMinimal) View.VISIBLE else View.GONE
+        val fullVisibility = if (isMinimal) View.GONE else View.VISIBLE
+
+        binding.minimalClockGroup.visibility = minimalVisibility
+        binding.minimalDockRow.visibility = minimalVisibility
+
+        binding.quickToggleContainer.visibility = fullVisibility
+        binding.recentAppsSection.visibility = if (isMinimal) View.GONE else binding.recentAppsSection.visibility
+        binding.githubSection.visibility = if (isMinimal) View.GONE else binding.githubSection.visibility
+        binding.widgetRow.visibility = fullVisibility
+        binding.appGrid.visibility = fullVisibility
+
+        if (isMinimal) {
+            minimalClockHandler.post(minimalClockUpdater)
+            val pinnedApps = allApps.filter { categoryPreferences.isPinned(it.key) }
+            minimalDockAdapter.updateItems(pinnedApps.map { LauncherListItem.AppItem(it) })
+        } else {
+            minimalClockHandler.removeCallbacks(minimalClockUpdater)
+        }
+    }
+
+    private fun updateMinimalClock() {
+        val now = Date()
+        binding.minimalClockText.text = DateFormat.format("HH:mm", now)
+        binding.minimalDateText.text = DateFormat.format("EEEE, d MMMM", now)
     }
 
     companion object {

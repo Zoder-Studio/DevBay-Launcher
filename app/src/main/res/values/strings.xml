@@ -190,4 +190,13 @@
     <string name="action_export_icon">Export icon</string>
     <string name="icon_exported">Icon for %1$s saved to Pictures/DevBayIcons</string>
     <string name="icon_export_failed">Failed to export icon</string>
+
+    <string name="settings_home_layout_label">Home Screen Style</string>
+    <string name="home_layout_full">Full (app drawer, widgets, quick toggles)</string>
+    <string name="home_layout_minimal">Minimal (clock, search, pinned dock)</string>
+
+    <string name="widget_size_picker_title">Choose widget size</string>
+    <string name="widget_size_small">Small</string>
+    <string name="widget_size_medium">Medium</string>
+    <string name="widget_size_large">Large</string>
 </resources>
