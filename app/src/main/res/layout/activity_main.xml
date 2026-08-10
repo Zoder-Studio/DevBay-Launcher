@@ -88,6 +88,7 @@
     </FrameLayout>
 
     <LinearLayout
+        android:id="@+id/quickToggleContainer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
@@ -139,7 +140,7 @@
         android:inputType="text|textNoSuggestions"
         android:imeOptions="actionSearch"
         android:maxLines="1"
-        app:layout_constraintTop_toBottomOf="@id/quickToggleRow"
+        app:layout_constraintTop_toBottomOf="@id/quickToggleContainer"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toStartOf="@id/vaultBiometricButton" />
 
